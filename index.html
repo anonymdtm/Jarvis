@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarvis – dein kostenloser KI-Assistent für Android und Windows</title>
+<meta name="description" content="Jarvis hört zu und macht: Nachrichten, Anrufe, Musik, Timer, Wetter, Termine, Erinnerungen – kostenlos, ohne Abo, für Android und Windows-PC. Alles bleibt auf deinem Gerät. Auch für Eltern und Großeltern.">
+<meta property="og:title" content="Jarvis – dein kostenloser KI-Assistent">
+<meta property="og:description" content="Du sprichst, Jarvis macht. Kostenlos, ohne Abo, Daten bleiben auf dem Handy.">
+<meta property="og:image" content="video-poster.jpg">
+<meta name="theme-color" content="#030A16">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+<script src="config.js"></script>
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><span class="logo">J</span>JARVIS</a>
+    <nav>
+      <a href="#funktionen">Funktionen</a>
+      <a href="#familie">Für die Familie</a>
+      <a href="#einrichten">Einrichten</a>
+      <a href="#faq">Fragen</a>
+      <a class="btn primary" href="#download">Kostenlos laden</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="glow"></div>
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Android &amp; Windows-PC · kostenlos · ohne Abo</div>
+      <h1>Du sprichst.<br><span>Jarvis macht.</span></h1>
+      <p class="lead">Nachrichten schreiben, anrufen, Musik, Timer, Wetter, Termine, Erinnerungen – mit deiner Stimme. Dein Gedächtnis, deine Nachrichten und deine Schlüssel bleiben auf deinem Handy.</p>
+      <div class="cta">
+        <a class="btn primary" href="#download">Kostenlos laden</a>
+        <a class="btn ghost" href="#video">▶ Erklärvideo (2 Min.)</a>
+      </div>
+      <div class="facts">
+        <span><b>0 €</b> – keine versteckten Kosten</span>
+        <span><b>Kein Konto</b> nötig</span>
+        <span><b>Handy + PC</b> – eine App, beide Geräte</span>
+        <span><b>Sperre</b> mit PIN &amp; Fingerabdruck</span>
+      </div>
+    </div>
+    <canvas id="orb" aria-hidden="true"></canvas>
+  </div>
+</section>
+
+<section id="video" class="alt">
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="eyebrow">So funktioniert's</div>
+      <h2>Zwei Minuten, dann kennst du die App.</h2>
+      <p class="muted">Das gleiche Video läuft beim ersten Start in der App: die vier Seiten, was du einmal einrichten musst, und was Jarvis alles kann. Komplett ohne Sprecher – einfach mitlesen.</p>
+      <p class="muted">Das Video liegt auf dieser Seite, nicht bei YouTube – es werden keine Daten an Dritte übertragen.</p>
+    </div>
+    <div class="video reveal">
+      <video controls preload="none" poster="video-poster.jpg" playsinline>
+        <source src="erklaervideo.mp4" type="video/mp4">
+        Dein Browser kann das Video nicht abspielen.
+      </video>
+    </div>
+  </div>
+</section>
+
+<section id="funktionen">
+  <div class="wrap">
+    <div class="eyebrow">Funktionen</div>
+    <h2 class="reveal">Was Jarvis für dich erledigt</h2>
+    <div class="grid three" style="margin-top:26px">
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></div><h3>Freihändig</h3><p>„Jarvis, …“ – er reagiert auf seinen Namen, auch wenn das Handy in der Tasche steckt.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><h3>Nachrichten &amp; Anrufe</h3><p>WhatsApp, SMS, Mail schreiben und vorlesen lassen. Jarvis nimmt Anrufe an, wenn du nicht kannst – und sagt dir, was der Anrufer wollte.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><h3>Musik per Zuruf</h3><p>Spotify-Playlists, Lieblingssongs, nächster Titel – ohne hinzusehen.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M19 3l3 3"/></svg></div><h3>Timer, Wecker, Erinnerungen</h3><p>„Erinnere mich morgen um 9 an den Zahnarzt“ – auf die Sekunde, auch als Anruf von Jarvis.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></div><h3>Wetter, News, Bundesliga</h3><p>Wird es morgen windig? Wie hat Dortmund gespielt? Jarvis sieht selbst nach und nennt die Quelle.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Dein Tag</h3><p>Morgens ein Briefing: Termine, neue Nachrichten, Aufgaben, Schlaf von der Uhr, Schritte. Abends ein kurzer Rückblick.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 2 7h10c0-2 2-4 2-7a7 7 0 0 0-7-7zM9 20h6M10 22h4"/></svg></div><h3>Gedächtnis</h3><p>„Merk dir, dass meine Schwester Anna heißt“ – Jarvis weiß es beim nächsten Mal. Alles sichtbar, alles löschbar, nur auf deinem Handy.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><h3>PC steuern</h3><p>Jarvis läuft auch auf deinem Windows-PC: Programme öffnen, Dateien sortieren, Bildschirm vorlesen – vom Handy aus.</p></div>
+      <div class="card reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><h3>Privat &amp; gesperrt</h3><p>PIN oder Passwort, Fingerabdruck. Nachrichten, Passwörter und Schlafdaten gehen nie in die Cloud.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="phones">
+      <figure class="phone reveal"><img src="screen-start.jpg" alt="Die Startseite von Jarvis mit dem Kern und den Schnellaktionen" loading="lazy"><figcaption>Startseite: sprechen, Schnellaktionen</figcaption></figure>
+      <figure class="phone reveal"><img src="screen-heute.jpg" alt="Die Heute-Seite: Briefing, Termine, Nachrichten, Aufgaben" loading="lazy"><figcaption>Heute: dein Tag auf einen Blick</figcaption></figure>
+      <figure class="phone reveal"><img src="screen-gehirn.jpg" alt="Das Gehirn: was Jarvis sich gemerkt hat" loading="lazy"><figcaption>Gehirn: was er sich merkt</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="familie">
+  <div class="wrap">
+    <div class="eyebrow">Für Eltern und Großeltern</div>
+    <h2 class="reveal">Einfach &amp; sicher – auch für die, die nicht gern tippen.</h2>
+    <div class="grid three" style="margin-top:26px">
+      <div class="card reveal"><h3>Großer Modus</h3><p>Wenige, große Kacheln, Schrift sehr groß, kein Kleingedrucktes.</p></div>
+      <div class="card reveal"><h3>Medikamente</h3><p>„Erinnere mich jeden Tag um 8 an die Blutdrucktablette.“ Jarvis fragt nach, bis es bestätigt ist.</p></div>
+      <div class="card reveal"><h3>Notfall-Kachel</h3><p>Ein Tipp – Jarvis ruft die gewählte Person an und schickt ihr den Standort. Fünf Sekunden zum Abbrechen.</p></div>
+      <div class="card reveal"><h3>Betrugs-Warnung</h3><p>„Neue Nummer“, „Konto gesperrt“, Gutschein-Tricks: Jarvis warnt ruhig und sagt, was zu tun ist.</p></div>
+      <div class="card reveal"><h3>Geduldig zuhören</h3><p>Pausen beim Sprechen sind okay. Er fragt freundlich nochmal und hört weiter zu.</p></div>
+      <div class="card reveal"><h3>Was ist das?</h3><p>Foto machen – Jarvis liest den Brief vor, erklärt die Packung, übersetzt das Schild.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="einrichten" class="alt">
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="eyebrow">Einrichten</div>
+      <h2>Fünf Minuten, einmalig.</h2>
+      <p class="muted">Jarvis ist eine APK-Datei außerhalb des Play Stores. Android fragt einmal, ob du Apps aus dieser Quelle erlaubst – das ist normal. Die App enthält keine Werbung und kein Tracking.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: ZIP entpacken, Jarvis.exe starten.</p></div></div>
+      <div class="step"><div><h3>Video, Schrift, PIN</h3><p>Das Erklärvideo läuft, dann wählst du die Schriftgröße und eine PIN. Nur du kommst an deine Daten.</p></div></div>
+      <div class="step"><div><h3>Erlaubnisse</h3><p>Mikrofon, Kontakte, Benachrichtigungen – Jarvis erklärt jede selbst, du tippst „Erlauben“.</p></div></div>
+      <div class="step"><div><h3>KI-Gehirn (optional, kostenlos)</h3><p>Für freie Fragen: einen Gemini-Schlüssel bei Google AI Studio holen und eintragen. Ohne Schlüssel geht trotzdem vieles.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="download reveal">
+      <div>
+        <div class="eyebrow">Download</div>
+        <h2>Jarvis kostenlos laden</h2>
+        <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC – und eine kurze Mail, wenn es eine neue Version gibt. Keine Werbung, jederzeit abbestellbar.</p>
+        <p class="version" id="version"></p>
+        <p class="notice">Android 11 oder neuer · Windows 10/11. Die Dateien kommen von GitHub, wo auch der Quellcode liegt.</p>
+      </div>
+      <div>
+        <form class="form" id="dl-form" novalidate>
+          <input type="email" id="email" placeholder="deine@e-mail.de" autocomplete="email" required>
+          <label class="check"><input type="checkbox" id="optin"> Ich möchte per E-Mail über neue Versionen informiert werden und habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen. Abbestellen geht in jeder Mail.</label>
+          <button class="btn primary" id="dl-submit" type="submit">Weiter zum Download</button>
+          <p class="muted" id="dl-error" style="margin:0;font-size:.9rem"></p>
+        </form>
+        <div class="ready" id="dl-ready">
+          <p><b>Danke!</b> Hier sind deine Dateien:</p>
+          <p><a class="btn primary" id="download-link" href="#">⬇ Jarvis für Android (APK)</a></p>
+          <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (ZIP)</a></p>
+          <p class="muted" style="font-size:.9rem">PC: ZIP entpacken und <b>Jarvis.exe</b> starten – ohne Installation. Die Verbindung zum Handy wird in der App unter „PC koppeln“ erklärt.</p>
+          <p class="muted" style="margin-top:12px;font-size:.9rem">Alle Versionen und der Quellcode: <a id="releases-link" href="#">GitHub Releases</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="alt">
+  <div class="wrap" style="max-width:820px">
+    <div class="eyebrow">Fragen</div>
+    <h2 class="reveal">Kurz beantwortet</h2>
+    <details class="reveal"><summary>Ist Jarvis wirklich kostenlos?</summary><p>Ja. Kein Abo, keine In-App-Käufe, keine Werbung. Für das KI-Gehirn nutzt du deinen eigenen, kostenlosen Google-Gemini-Schlüssel; für bessere Stimmen optional Microsofts kostenlose Stimmen.</p></details>
+    <details class="reveal"><summary>Wohin gehen meine Daten?</summary><p>Nachrichten, Kontakte, Gedächtnis, Schlaf- und Schrittdaten bleiben auf dem Handy. Nur das, was du der KI sagst oder fragst, geht an Google (Gemini) – und nur, wenn du den Schlüssel eingetragen hast. Private Dinge wie Nachrichten liest immer die Handystimme vor.</p></details>
+    <details class="reveal"><summary>Warum nicht im Play Store?</summary><p>Jarvis ist ein freies Projekt eines einzelnen Entwicklers. Der Weg über die APK-Datei spart die Store-Gebühren und Einschränkungen – die Datei liegt offen auf GitHub, zusammen mit dem Quellcode.</p></details>
+    <details class="reveal"><summary>Welche Handys?</summary><p>Android 11 oder neuer. Entwickelt und getestet auf Samsung Galaxy. Die Windows-App für den PC gibt es ebenfalls auf GitHub.</p></details>
+    <details class="reveal"><summary>Wie bekomme ich Updates?</summary><p>Die App sagt dir Bescheid, wenn es eine neue Version gibt. Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© <span class="year"></span> Warpline Games · Jarvis</div>
+    <div>
+      <a href="impressum.html">Impressum</a>
+      <a href="datenschutz.html">Datenschutz</a>
+      <a href="#" id="consent-open">Einwilligung ändern</a>
+      <a id="instagram" href="#" rel="me noopener" target="_blank">Instagram</a>
+      <a href="https://github.com/anonymdtm/jarvis" rel="noopener" target="_blank">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<div class="consent" id="consent" role="dialog" aria-label="Einwilligung">
+  <p><b>Kurz zur Technik:</b> Diese Seite setzt keine Werbe- oder Tracking-Cookies. Mit „Einverstanden“ darf die Seite die aktuelle Versionsnummer bei GitHub (USA) abrufen – dabei wird deine IP-Adresse an GitHub übertragen. Ohne Einwilligung bleibt alles lokal; den Download findest du dann über den Link zu GitHub. Deine Wahl wird nur in deinem Browser gespeichert.</p>
+  <div class="row">
+    <button class="btn primary" id="consent-yes">Einverstanden</button>
+    <button class="btn" id="consent-no">Nur Notwendiges</button>
+    <a class="btn ghost" href="datenschutz.html">Mehr erfahren</a>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

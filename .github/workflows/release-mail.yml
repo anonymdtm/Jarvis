@@ -1,0 +1,40 @@
+# Schickt bei jedem veröffentlichten Release eine kurze Mail an alle Abonnenten (Brevo).
+# Einrichtung einmalig: Repository → Settings → Secrets and variables → Actions:
+#   BREVO_API_KEY   = API-Schlüssel aus Brevo (SMTP & API → API-Schlüssel)
+#   BREVO_LIST_ID   = Nummer der Empfängerliste (Kontakte → Listen)
+#   BREVO_SENDER    = bestätigte Absenderadresse, z. B. jarvis@deine-domain.de
+# Ohne diese Secrets macht der Workflow nichts kaputt – er überspringt den Versand.
+name: Release-Mail
+on:
+  release:
+    types: [published]
+jobs:
+  mail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mail an die Liste
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID }}
+          BREVO_SENDER: ${{ secrets.BREVO_SENDER }}
+          TAG: ${{ github.event.release.tag_name }}
+          URL: ${{ github.event.release.html_url }}
+          NOTES: ${{ github.event.release.body }}
+        run: |
+          if [ -z "$BREVO_API_KEY" ] || [ -z "$BREVO_LIST_ID" ] || [ -z "$BREVO_SENDER" ]; then echo "Brevo nicht eingerichtet – kein Versand."; exit 0; fi
+          SITE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
+          HTML=$(python3 - <<PY
+          import html, os
+          notes = html.escape(os.environ.get("NOTES") or "").replace("\n", "<br>")
+          print(f"""<div style='font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#030A16;color:#E6F1FF;padding:28px;border-radius:16px'>
+          <h2 style='color:#46E0FF;margin:0 0 12px'>Jarvis {os.environ['TAG']} ist da</h2>
+          <p>Es gibt eine neue Version von Jarvis. Die Datei findest du wie immer auf der Webseite oder direkt bei GitHub.</p>
+          <p style='color:#B9C7DE'>{notes}</p>
+          <p><a href='{os.environ['URL']}' style='background:#2FA8FF;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold'>Neue Version laden</a></p>
+          <p style='color:#7F98BC;font-size:12px'>Du bekommst diese Mail, weil du dich auf <a href='{os.environ['SITE']}' style='color:#7F98BC'>der Jarvis-Seite</a> eingetragen hast. Abmelden: {{{{ unsubscribe }}}}</p></div>""")
+          PY
+          )
+          BODY=$(python3 -c "import json,os,sys; print(json.dumps({'name':'Jarvis '+os.environ['TAG'],'subject':'Jarvis '+os.environ['TAG']+' ist da','sender':{'name':'Jarvis','email':os.environ['BREVO_SENDER']},'htmlContent':sys.stdin.read(),'recipients':{'listIds':[int(os.environ['BREVO_LIST_ID'])]}}))" <<<"$HTML")
+          ID=$(curl -sS -X POST https://api.brevo.com/v3/emailCampaigns -H "api-key: $BREVO_API_KEY" -H "content-type: application/json" -d "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
+          if [ -z "$ID" ]; then echo "Kampagne konnte nicht angelegt werden."; exit 1; fi
+          curl -sS -X POST "https://api.brevo.com/v3/emailCampaigns/$ID/sendNow" -H "api-key: $BREVO_API_KEY" && echo "Mail an die Liste geschickt (Kampagne $ID)."
