@@ -74,6 +74,7 @@
       p: ["Auf der <a href=\"index.html#download\">Startseite</a> die E-Mail eintragen und <b>„Jarvis für Android (APK)“</b> antippen. " +
         "Fragt der Browser nach: <b>„Herunterladen“</b> bzw. <b>„Trotzdem herunterladen“</b>.",
       `Danach in der Meldung auf <b>„Öffnen“</b> tippen – oder in der App <b>„${b.files}“</b> unter <b>„Downloads“</b> auf <b>„Jarvis.apk“</b>.`],
+      tip: "Schon mal eine Jarvis-Datei geladen? Dann heißt die neue z. B. „Jarvis-1.apk“ – leicht erwischt man die alte. Am besten alte Jarvis-Dateien in „Downloads“ vorher löschen.",
       shots: [M.notif(ui, "Fertig geladen → „Öffnen“")],
     });
     if (b.autoBlock) {
