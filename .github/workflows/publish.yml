@@ -24,7 +24,11 @@ jobs:
         run: |
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release $TAG gibt es schon – Dateien werden ersetzt."
+            for old in $(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'); do
+              [ -f "$old" ] || gh release delete-asset "$TAG" "$old" --yes --repo "$GITHUB_REPOSITORY"
+            done
             gh release upload "$TAG" *.apk *.zip --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" *.apk *.zip --title "Jarvis $TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
           fi
