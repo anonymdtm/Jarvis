@@ -1,6 +1,6 @@
 # Jarvis – Webseite
 
-Statische Seite für GitHub Pages (kein Build nötig): `index.html`, `styles.css`, `app.js`, `config.js`, `impressum.html`, `datenschutz.html`, die Bilder (`screen-*.jpg`, `video-poster.jpg`, `og.jpg` für die Link-Vorschau) und das Video liegen daneben. Live: https://anonymdtm.github.io/Jarvis/
+Statische Seite für GitHub Pages (kein Build nötig): `index.html`, `styles.css`, `app.js`, `config.js`, `anleitung.html` + `anleitung.js` (Installations-Anleitung je Handy-Marke und für Windows, mit nachgebauten Bildschirmen; Links wie `anleitung.html#samsung`, `#xiaomi`, `#windows`), `impressum.html`, `datenschutz.html`, die Bilder (`screen-*.jpg`, `video-poster.jpg`, `og.jpg` für die Link-Vorschau) und das Video liegen daneben. Live: https://anonymdtm.github.io/Jarvis/
 
 Der Quellcode der App liegt **nicht** in diesem Repository – hier sind nur die Webseite und die fertigen Dateien (Releases).
 
