@@ -5,37 +5,42 @@
   const $ = (s, r = document) => r.querySelector(s);
   const CONSENT_KEY = "jarvis.consent";                       // "yes" | "no" – nur im Browser des Besuchers
 
-  // ------------------------------------------------------------------ the core (canvas)
+  // ------------------------------------------------------------------ the core (canvas): flach, ohne Leuchten,
+  // Farben aus dem Stylesheet (hell/dunkel wie das System)
   const c = $("#orb");
   if (c) {
     const ctx = c.getContext("2d");
     const pts = []; const n = 700; const ga = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < n; i++) { const y = 1 - (i / (n - 1)) * 2; const r = Math.sqrt(1 - y * y); const a = ga * i; pts.push([Math.cos(a) * r, y, Math.sin(a) * r]); }
-    let t = 0; let reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let t = 0; const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let col = {};
+    function colors() {
+      const cs = getComputedStyle(document.documentElement);
+      const v = (k, d) => (cs.getPropertyValue(k) || "").trim() || d;
+      col = { sphere: v("--orb-sphere", "#0B2547"), dot: v("--orb-dot", "#46E0FF"), hi: v("--orb-dot-hi", "#F2F7FF"), ring: v("--orb-ring", "#0957C3") };
+    }
+    colors();
+    try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", colors); } catch (e) { /* alte Browser */ }
     function size() { const s = Math.min(c.clientWidth, 440); c.width = s * devicePixelRatio; c.height = s * devicePixelRatio; }
     size(); window.addEventListener("resize", size);
     function frame() {
       const W = c.width, H = c.height, R = W * 0.36, x = W / 2, y = H / 2;
       ctx.clearRect(0, 0, W, H);
-      const g = ctx.createRadialGradient(x, y, R * 0.2, x, y, R * 2.2);
-      g.addColorStop(0, "rgba(70,224,255,.35)"); g.addColorStop(0.4, "rgba(47,168,255,.12)"); g.addColorStop(1, "rgba(3,10,22,0)");
-      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-      const b = ctx.createRadialGradient(x - R * .35, y - R * .4, R * .1, x, y, R);
-      b.addColorStop(0, "#0E3B6E"); b.addColorStop(.7, "#061C3A"); b.addColorStop(1, "#02060E");
-      ctx.fillStyle = b; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = col.sphere; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
       const cs = Math.cos(t), sn = Math.sin(t), tc = Math.cos(.35), ts = Math.sin(.35);
       for (const [px, py, pz] of pts) {
         let X = px * cs - pz * sn, Z = px * sn + pz * cs, Y = py;
         const Y2 = Y * tc - Z * ts, Z2 = Y * ts + Z * tc; Y = Y2; Z = Z2;
         if (Z < -0.15) continue;
         const d = (Z + .15) / 1.15;
-        ctx.fillStyle = d > .72 ? "#F2F7FF" : "#46E0FF"; ctx.globalAlpha = .25 + .75 * d;
+        ctx.fillStyle = d > .72 ? col.hi : col.dot; ctx.globalAlpha = .25 + .75 * d;
         ctx.beginPath(); ctx.arc(x + X * R * .96, y + Y * R * .96, R * .028 * (.4 + d), 0, Math.PI * 2); ctx.fill();
       }
-      ctx.globalAlpha = 1; ctx.strokeStyle = "rgba(242,247,255,.6)"; ctx.lineWidth = Math.max(1, R * .02);
+      ctx.globalAlpha = .8; ctx.strokeStyle = col.ring; ctx.lineWidth = Math.max(1, R * .016);
       ctx.beginPath(); ctx.ellipse(x, y, R * 1.02, R * .22, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = "rgba(70,224,255,.25)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, R * 1.3, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = "rgba(70,224,255,.12)"; ctx.beginPath(); ctx.arc(x, y, R * 1.6, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = .35; ctx.lineWidth = Math.max(1, R * .008);
+      ctx.beginPath(); ctx.arc(x, y, R * 1.3, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
       t += reduced ? 0 : 0.0015;                                        // a calm, barely visible turn
       requestAnimationFrame(frame);
     }

@@ -16,7 +16,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#030A16">
+<meta name="theme-color" content="#F5F7FA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#050B16" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
 <script src="config.js"></script>
@@ -33,14 +34,12 @@
       <a href="#familie">Für die Familie</a>
       <a href="#einrichten">Einrichten</a>
       <a href="anleitung.html">Anleitung</a>
-      <a href="#faq">Fragen</a>
       <a class="btn primary" href="#download">Kostenlos laden</a>
     </nav>
   </div>
 </header>
 
 <section class="hero">
-  <div class="glow"></div>
   <div class="wrap">
     <div>
       <div class="eyebrow">Android &amp; Windows-PC · kostenlos · ohne Abo</div>
@@ -126,14 +125,14 @@
     <div class="reveal">
       <div class="eyebrow">Einrichten</div>
       <h2>Fünf Minuten, einmalig.</h2>
-      <p class="muted">Jarvis ist eine APK-Datei außerhalb des Play Stores. Android fragt einmal, ob du Apps aus dieser Quelle erlaubst – das ist normal. Die App enthält keine Werbung und kein Tracking.</p>
+      <p class="muted">Jarvis ist eine APK-Datei außerhalb des Play Stores: ein freies Projekt eines einzelnen Entwicklers, ohne Store-Gebühren und ohne Werbung, Tracking oder In-App-Käufe. Android fragt deshalb einmal, ob du Apps aus dieser Quelle erlaubst – das ist normal. GitHub ist dabei nur der Download-Server; der Quellcode der App ist nicht veröffentlicht.</p>
       <p><a class="btn" href="anleitung.html">Anleitung mit Bildern – für dein Handy &amp; PC</a></p>
     </div>
     <div class="steps reveal">
       <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: Jarvis-Setup.exe starten, Weiter, Fertig – beim ersten Mal „Weitere Informationen → Trotzdem ausführen“.</p></div></div>
       <div class="step"><div><h3>Video, Schrift, PIN</h3><p>Das Erklärvideo läuft, dann wählst du die Schriftgröße und eine PIN. Nur du kommst an deine Daten.</p></div></div>
       <div class="step"><div><h3>Erlaubnisse</h3><p>Mikrofon, Kontakte, Benachrichtigungen – Jarvis erklärt jede selbst, du tippst „Erlauben“.</p></div></div>
-      <div class="step"><div><h3>KI-Gehirn (optional, kostenlos)</h3><p>Für freie Fragen: einen Gemini-Schlüssel bei Google AI Studio holen und eintragen. Ohne Schlüssel geht trotzdem vieles.</p></div></div>
+      <div class="step"><div><h3>KI-Gehirn (optional, kostenlos)</h3><p>Für freie Fragen: einen kostenlosen Gemini-Schlüssel bei Google AI Studio holen und eintragen. Nur was du dann der KI sagst, geht an Google – Nachrichten, Kontakte, Gedächtnis, Schlaf- und Schrittdaten bleiben auf dem Handy. Ohne Schlüssel geht trotzdem vieles.</p></div></div>
     </div>
   </div>
 </section>
@@ -147,7 +146,7 @@
         <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC.<span class="only-brevo"> Wenn du magst, schicken wir dir eine kurze Mail, sobald es eine neue Version gibt. Keine Werbung, jederzeit abbestellbar.</span><span class="no-brevo"> Deine Adresse wird dabei nicht gespeichert (<a href="datenschutz.html">Datenschutz</a>); die App sagt dir selbst Bescheid, wenn es eine neue Version gibt.</span></p>
         <p class="version" id="version"></p>
         <p class="notes" id="notes" hidden></p>
-        <p class="notice">Android 11 oder neuer · Windows 10/11. Die Dateien liegen auf GitHub, unserem Download-Server – die Knöpfe laden direkt die neueste Datei.</p>
+        <p class="notice">Android 11 oder neuer (entwickelt und getestet auf Samsung Galaxy) · Windows 10/11, ohne Administratorrechte. Die Dateien liegen auf GitHub, unserem Download-Server – die Knöpfe laden direkt die neueste Datei.</p>
       </div>
       <div>
         <form class="form" id="dl-form" novalidate>
@@ -162,7 +161,7 @@
           <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (Setup)</a><span class="dlmeta" id="meta-pc"></span></p>
           <div class="hints">
             <p><b>Schritt für Schritt mit Bildern</b> für Samsung, Xiaomi, Pixel, OnePlus &amp; Co. und für Windows: <a href="anleitung.html">Anleitung öffnen</a></p>
-            <p><b>Handy:</b> APK antippen → „Installieren“. Fragt Android, ob Apps aus dieser Quelle erlaubt sind: einmal erlauben, das ist bei Apps außerhalb des Play Stores normal. Samsung meldet „Unbekannte App gesperrt“? Dann die <b>Automatische Sperre</b> kurz ausschalten (<a href="anleitung.html#samsung">so geht’s</a>).</p>
+            <p><b>Handy:</b> APK antippen → „Installieren“. Fragt Android, ob Apps aus dieser Quelle erlaubt sind: einmal erlauben, das ist bei Apps außerhalb des Play Stores normal. Samsung meldet „Unbekannte App gesperrt“? Dann die <b>Automatische Sperre</b> kurz ausschalten (<a href="anleitung.html#samsung">so geht’s</a>). <b>Updates:</b> Jarvis sagt dir Bescheid – neue APK laden und einfach darüber installieren, deine Einstellungen bleiben.<span class="only-brevo"> Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</span></p>
             <p><b>PC:</b> <b>Jarvis-Setup.exe</b> starten → Weiter → Fertig. Jarvis landet in deinem Benutzerordner, mit Verknüpfung auf dem Desktop – ohne Administratorrechte. Zeigt Windows „Der Computer wurde durch Windows geschützt“: auf <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b> klicken. Der Hinweis kommt, weil Jarvis kein kostenpflichtiges Signatur-Zertifikat hat. Updates: einfach das neue Setup starten, deine Einstellungen bleiben.</p>
             <p><b>Windows 11 sagt „Smart App Control hat eine App blockiert“?</b> Diese Sperre kennt kein „Trotzdem“ – sie lässt nur Programme mit gekauftem Zertifikat zu. Einmalig ausschalten: Start → <b>Windows-Sicherheit</b> → <b>App- &amp; Browsersteuerung</b> → <b>Smart App Control-Einstellungen</b> → <b>Aus</b>, dann das Setup erneut starten. (Lässt sich später nur mit einer Windows-Neuinstallation wieder einschalten; der Virenschutz bleibt davon unberührt.)</p>
             <p>Die Verbindung zum Handy wird in der App unter „PC koppeln“ erklärt. Alle Versionen: <a id="releases-link" href="#">GitHub Releases</a></p>
@@ -172,21 +171,6 @@
     </div>
   </div>
 </section>
-
-<section id="faq" class="alt">
-  <div class="wrap" style="max-width:820px">
-    <div class="eyebrow">Fragen</div>
-    <h2 class="reveal">Kurz beantwortet</h2>
-    <details class="reveal"><summary>Ist Jarvis wirklich kostenlos?</summary><p>Ja. Kein Abo, keine In-App-Käufe, keine Werbung. Für das KI-Gehirn nutzt du deinen eigenen, kostenlosen Google-Gemini-Schlüssel; für bessere Stimmen optional Microsofts kostenlose Stimmen.</p></details>
-    <details class="reveal"><summary>Wohin gehen meine Daten?</summary><p>Nachrichten, Kontakte, Gedächtnis, Schlaf- und Schrittdaten bleiben auf dem Handy. Nur das, was du der KI sagst oder fragst, geht an Google (Gemini) – und nur, wenn du den Schlüssel eingetragen hast. Private Dinge wie Nachrichten liest immer die Handystimme vor.</p></details>
-    <details class="reveal"><summary>Warum nicht im Play Store?</summary><p>Jarvis ist ein freies Projekt eines einzelnen Entwicklers. Der Weg über die APK-Datei spart die Store-Gebühren und Einschränkungen. Die Dateien liegen auf GitHub – das ist nur der Download-Server, der Quellcode der App ist nicht veröffentlicht.</p></details>
-    <details class="reveal"><summary>Android blockiert die Installation oder die Bedienungshilfe – was tun?</summary><p>Beim ersten Mal kommen je nach Handy ein paar Sicherheitsabfragen: bei Samsung die „Automatische Sperre“, bei allen Play Protect („App scannen“) und bei der Bedienungshilfe „Eingeschränkte Einstellung“. Das ist bei jeder App außerhalb des Play Stores so. In der <a href="anleitung.html">Anleitung</a> zeigen wir für Samsung, Xiaomi, Pixel, OnePlus, Motorola, Nothing und Honor jeden Bildschirm.</p></details>
-    <details class="reveal"><summary>Windows blockiert das Setup – was tun?</summary><p>Meldung „Der Computer wurde durch Windows geschützt“: auf „Weitere Informationen“ und dann „Trotzdem ausführen“ klicken. Meldung „Smart App Control hat eine App blockiert“: Das ist eine Sperre neuer Windows-11-PCs gegen alle Programme ohne gekauftes Zertifikat. Ausschalten unter Windows-Sicherheit → App- &amp; Browsersteuerung → Smart App Control-Einstellungen → Aus, dann das Setup erneut starten. Beides kommt, weil Jarvis ein kostenloses Projekt ohne teures Signatur-Zertifikat ist – nicht, weil etwas schädlich wäre. <a href="anleitung.html#windows">Anleitung mit Bildern</a></p></details>
-    <details class="reveal"><summary>Welche Geräte?</summary><p>Handy: Android 11 oder neuer, entwickelt und getestet auf Samsung Galaxy. PC: Windows 10 oder 11 – Jarvis-Setup.exe starten, fertig. Keine Administratorrechte nötig.</p></details>
-    <details class="reveal"><summary>Wie bekomme ich Updates?</summary><p>Die App sagt dir Bescheid, wenn es eine neue Version gibt – auf dem Handy und auf dem PC. Dann einfach die neue Datei laden und darüber installieren; deine Einstellungen bleiben erhalten.<span class="only-brevo"> Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</span></p></details>
-  </div>
-</section>
-
 <footer>
   <div class="wrap">
     <div>© <span class="year"></span> Warpline Games · Jarvis</div>
