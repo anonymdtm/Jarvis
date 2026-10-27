@@ -60,9 +60,10 @@
   // ------------------------------------------------------------------ latest version (GitHub Releases API, only with consent)
   const versionEl = $("#version"), notesEl = $("#notes"), dl = $("#download-link"), dlPc = $("#download-pc"), dlAll = $("#releases-link");
   const repoUrl = `https://github.com/${CFG.repo}/releases`;
+  // the files always have the same names, so the buttons work without asking anyone (no API call, no consent needed)
   if (dlAll) dlAll.href = repoUrl;
-  if (dl) dl.href = repoUrl + "/latest";
-  if (dlPc) dlPc.href = repoUrl + "/latest";
+  if (dl) dl.href = `${repoUrl}/latest/download/${CFG.apkName || "Jarvis.apk"}`;
+  if (dlPc) dlPc.href = `${repoUrl}/latest/download/${CFG.setupName || "Jarvis-Setup.exe"}`;
   async function loadLatest() {
     if (!versionEl || consent() !== "yes") return;
     try {
@@ -70,11 +71,12 @@
       if (!r.ok) throw new Error(r.status);
       const j = await r.json();
       const apk = (j.assets || []).find(a => /\.apk$/i.test(a.name));
-      const zip = (j.assets || []).find(a => /\.zip$/i.test(a.name));
+      const setup = (j.assets || []).find(a => /\.exe$/i.test(a.name));
       const when = j.published_at ? new Date(j.published_at).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : "";
-      versionEl.textContent = `Aktuelle Version: ${j.tag_name || j.name}${when ? " · " + when : ""}${apk ? " · Android " + Math.round(apk.size / 1048576) + " MB" : ""}${zip ? " · PC " + Math.round(zip.size / 1048576) + " MB" : ""}`;
+      const pcv = /PC-Version:\s*v?([0-9][0-9.]*[0-9])/i.exec(j.body || "");
+      versionEl.textContent = `Aktuelle Version: Android ${j.tag_name || j.name}${pcv ? " · PC " + pcv[1] : ""}${when ? " · " + when : ""}${apk ? " · APK " + Math.round(apk.size / 1048576) + " MB" : ""}${setup ? " · Setup " + Math.round(setup.size / 1048576) + " MB" : ""}`;
       if (apk && dl) dl.href = apk.browser_download_url;
-      if (zip && dlPc) dlPc.href = zip.browser_download_url;
+      if (setup && dlPc) dlPc.href = setup.browser_download_url;
       // the release notes, as plain text (never as HTML), shortened
       const body = String(j.body || "").replace(/\r/g, "").replace(/^#+\s*/gm, "").replace(/^[-*]\s+/gm, "• ").replace(/\n{3,}/g, "\n\n").trim();
       if (notesEl && body) { notesEl.textContent = body.length > 600 ? body.slice(0, 600).replace(/\s+\S*$/, "") + " …" : body; notesEl.hidden = false; }

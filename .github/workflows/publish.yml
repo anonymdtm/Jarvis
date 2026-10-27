@@ -1,4 +1,4 @@
-# Veröffentlicht eine neue Version: Claude legt die Dateien auf dem Zweig "release" ab (VERSION, NOTES.md, APK, ZIP),
+# Veröffentlicht eine neue Version: Claude legt die Dateien auf dem Zweig "release" ab (VERSION, NOTES.md, Jarvis.apk, Jarvis-Setup.exe),
 # dieser Workflow macht daraus den GitHub-Release – die Webseite und die App sehen ihn automatisch – und schickt danach
 # die Update-Mail an die Brevo-Liste (sobald die drei Secrets eingetragen sind, siehe release-mail.yml).
 name: Veröffentlichen
@@ -27,10 +27,10 @@ jobs:
             for old in $(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'); do
               [ -f "$old" ] || gh release delete-asset "$TAG" "$old" --yes --repo "$GITHUB_REPOSITORY"
             done
-            gh release upload "$TAG" *.apk *.zip --clobber --repo "$GITHUB_REPOSITORY"
+            gh release upload "$TAG" *.apk *.exe --clobber --repo "$GITHUB_REPOSITORY"
             gh release edit "$TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
           else
-            gh release create "$TAG" *.apk *.zip --title "Jarvis $TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
+            gh release create "$TAG" *.apk *.exe --title "Jarvis $TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
           fi
           echo "url=https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_OUTPUT"
       - name: Mail an die Liste (Brevo)

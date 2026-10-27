@@ -5,9 +5,9 @@ Statische Seite für GitHub Pages (kein Build nötig): `index.html`, `styles.css
 Der Quellcode der App liegt **nicht** in diesem Repository – hier sind nur die Webseite und die fertigen Dateien (Releases).
 
 ## So kommt eine neue Version online (automatisch)
-1. Claude legt auf dem Zweig `release` die Dateien ab: `VERSION` (z. B. `1.0.30`), `NOTES.md`, `Jarvis-<Version>.apk`, `Jarvis-PC-<Version>.zip` – und pusht (der Zweig wird jedes Mal neu aufgesetzt, damit das Repository nicht wächst).
+1. Claude legt auf dem Zweig `release` die Dateien ab: `VERSION` (z. B. `1.0.30`), `NOTES.md`, `Jarvis.apk`, `Jarvis-Setup.exe` (immer dieselben Namen – so zeigen die Knöpfe der Webseite ohne API-Abfrage direkt auf die neueste Datei: `releases/latest/download/<Name>`) – und pusht (der Zweig wird jedes Mal neu aufgesetzt, damit das Repository nicht wächst).
 2. Der Workflow `.github/workflows/publish.yml` macht daraus den GitHub-Release.
-3. Die Webseite zeigt automatisch die neueste Version (GitHub-API, nach Einwilligung des Besuchers); die Knöpfe zeigen auf APK und ZIP des Releases, darunter stehen die Hinweise aus `NOTES.md`.
+3. Die Webseite zeigt automatisch die neueste Version (GitHub-API, nach Einwilligung des Besuchers); die Knöpfe laden APK und Setup, darunter stehen die Hinweise aus `NOTES.md`.
 4. Derselbe Workflow schickt die Update-Mail an alle Abonnenten – sobald die drei Brevo-Secrets eingetragen sind (BREVO_API_KEY, BREVO_LIST_ID, BREVO_SENDER unter Settings → Secrets and variables → Actions).
 5. Die Apps prüfen einmal am Tag `releases/latest` und zeigen „Neue Version“.
 

@@ -128,7 +128,7 @@
       <p class="muted">Jarvis ist eine APK-Datei außerhalb des Play Stores. Android fragt einmal, ob du Apps aus dieser Quelle erlaubst – das ist normal. Die App enthält keine Werbung und kein Tracking.</p>
     </div>
     <div class="steps reveal">
-      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: ZIP entpacken, Jarvis.exe starten – beim ersten Mal „Weitere Informationen → Trotzdem ausführen“.</p></div></div>
+      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: Jarvis-Setup.exe starten, Weiter, Fertig – beim ersten Mal „Weitere Informationen → Trotzdem ausführen“.</p></div></div>
       <div class="step"><div><h3>Video, Schrift, PIN</h3><p>Das Erklärvideo läuft, dann wählst du die Schriftgröße und eine PIN. Nur du kommst an deine Daten.</p></div></div>
       <div class="step"><div><h3>Erlaubnisse</h3><p>Mikrofon, Kontakte, Benachrichtigungen – Jarvis erklärt jede selbst, du tippst „Erlauben“.</p></div></div>
       <div class="step"><div><h3>KI-Gehirn (optional, kostenlos)</h3><p>Für freie Fragen: einen Gemini-Schlüssel bei Google AI Studio holen und eintragen. Ohne Schlüssel geht trotzdem vieles.</p></div></div>
@@ -145,7 +145,7 @@
         <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC.<span class="only-brevo"> Wenn du magst, schicken wir dir eine kurze Mail, sobald es eine neue Version gibt. Keine Werbung, jederzeit abbestellbar.</span><span class="no-brevo"> Deine Adresse wird dabei nicht gespeichert (<a href="datenschutz.html">Datenschutz</a>); die App sagt dir selbst Bescheid, wenn es eine neue Version gibt.</span></p>
         <p class="version" id="version"></p>
         <p class="notes" id="notes" hidden></p>
-        <p class="notice">Android 11 oder neuer · Windows 10/11. Die Dateien liegen auf GitHub, unserem Download-Server.</p>
+        <p class="notice">Android 11 oder neuer · Windows 10/11. Die Dateien liegen auf GitHub, unserem Download-Server – die Knöpfe laden direkt die neueste Datei.</p>
       </div>
       <div>
         <form class="form" id="dl-form" novalidate>
@@ -157,10 +157,10 @@
         <div class="ready" id="dl-ready">
           <p><b>Danke!</b> Hier sind deine Dateien:</p>
           <p><a class="btn primary" id="download-link" href="#">⬇ Jarvis für Android (APK)</a></p>
-          <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (ZIP)</a></p>
+          <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (Setup)</a></p>
           <div class="hints">
             <p><b>Handy:</b> APK antippen → „Installieren“. Fragt Android, ob Apps aus dieser Quelle erlaubt sind: einmal erlauben, das ist bei Apps außerhalb des Play Stores normal.</p>
-            <p><b>PC:</b> ZIP entpacken (Rechtsklick → „Alle extrahieren“) und <b>Jarvis.exe</b> starten – ohne Installation. Zeigt Windows beim ersten Start „Der Computer wurde durch Windows geschützt“: auf <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b> klicken. Der Hinweis kommt, weil Jarvis kein kostenpflichtiges Signatur-Zertifikat hat.</p>
+            <p><b>PC:</b> <b>Jarvis-Setup.exe</b> starten → Weiter → Fertig. Jarvis landet in deinem Benutzerordner, mit Verknüpfung auf dem Desktop – ohne Administratorrechte. Zeigt Windows „Der Computer wurde durch Windows geschützt“: auf <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b> klicken. Der Hinweis kommt, weil Jarvis kein kostenpflichtiges Signatur-Zertifikat hat. Updates: einfach das neue Setup starten, deine Einstellungen bleiben.</p>
             <p>Die Verbindung zum Handy wird in der App unter „PC koppeln“ erklärt. Alle Versionen: <a id="releases-link" href="#">GitHub Releases</a></p>
           </div>
         </div>
@@ -176,8 +176,8 @@
     <details class="reveal"><summary>Ist Jarvis wirklich kostenlos?</summary><p>Ja. Kein Abo, keine In-App-Käufe, keine Werbung. Für das KI-Gehirn nutzt du deinen eigenen, kostenlosen Google-Gemini-Schlüssel; für bessere Stimmen optional Microsofts kostenlose Stimmen.</p></details>
     <details class="reveal"><summary>Wohin gehen meine Daten?</summary><p>Nachrichten, Kontakte, Gedächtnis, Schlaf- und Schrittdaten bleiben auf dem Handy. Nur das, was du der KI sagst oder fragst, geht an Google (Gemini) – und nur, wenn du den Schlüssel eingetragen hast. Private Dinge wie Nachrichten liest immer die Handystimme vor.</p></details>
     <details class="reveal"><summary>Warum nicht im Play Store?</summary><p>Jarvis ist ein freies Projekt eines einzelnen Entwicklers. Der Weg über die APK-Datei spart die Store-Gebühren und Einschränkungen. Die Dateien liegen auf GitHub – das ist nur der Download-Server, der Quellcode der App ist nicht veröffentlicht.</p></details>
-    <details class="reveal"><summary>Welche Geräte?</summary><p>Handy: Android 11 oder neuer, entwickelt und getestet auf Samsung Galaxy. PC: Windows 10 oder 11 – ZIP entpacken, Jarvis.exe starten, keine Installation nötig.</p></details>
-    <details class="reveal"><summary>Wie bekomme ich Updates?</summary><p>Die App sagt dir Bescheid, wenn es eine neue Version gibt. Dann einfach hier die neue Datei laden und darüber installieren; deine Einstellungen bleiben erhalten.<span class="only-brevo"> Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</span></p></details>
+    <details class="reveal"><summary>Welche Geräte?</summary><p>Handy: Android 11 oder neuer, entwickelt und getestet auf Samsung Galaxy. PC: Windows 10 oder 11 – Jarvis-Setup.exe starten, fertig. Keine Administratorrechte nötig.</p></details>
+    <details class="reveal"><summary>Wie bekomme ich Updates?</summary><p>Die App sagt dir Bescheid, wenn es eine neue Version gibt – auf dem Handy und auf dem PC. Dann einfach die neue Datei laden und darüber installieren; deine Einstellungen bleiben erhalten.<span class="only-brevo"> Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</span></p></details>
   </div>
 </section>
 
