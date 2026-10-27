@@ -101,6 +101,9 @@ section.alt { background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 50%, 
 .version { font-size: .9rem; color: var(--muted); margin-top: 10px; }
 .notes { font-size: .9rem; color: var(--muted); white-space: pre-line; max-height: 10.5em; overflow: hidden; margin: 0 0 14px; }
 .hints p { font-size: .9rem; color: var(--muted); margin: 10px 0 0; }
+.dlmeta { display: block; margin: 7px 0 0 6px; font-size: .9rem; color: var(--muted); }
+.dlmeta b { color: var(--text); }
+.dlmeta:empty { display: none; }
 .hints b { color: var(--text); }
 .notice { font-size: .85rem; color: var(--muted); border-left: 3px solid var(--line-hi); padding-left: 12px; }
 

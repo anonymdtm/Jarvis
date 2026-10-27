@@ -14,5 +14,5 @@ Der Quellcode der App liegt **nicht** in diesem Repository – hier sind nur die
 Die Webseite selbst wird bei jedem Push auf `main` vom Workflow `.github/workflows/pages.yml` veröffentlicht (Settings → Pages → Source „GitHub Actions“ ist eingestellt).
 
 ## Anpassen
-- `config.js`: Repository, Brevo-Formular-Adresse, Instagram. Solange `brevoFormUrl` leer ist, zeigt die Seite ehrlich an, dass die E-Mail-Adresse nicht gespeichert wird (kein Mail-Häkchen, passender Absatz im Datenschutz); mit Adresse erscheinen Häkchen und Brevo-Absatz automatisch.
+- `config.js`: Repository, Brevo-Formular-Adresse, Instagram. Die neueste Version (`androidVersion`, `pcVersion`, `versionDate`) steht direkt an den Download-Knöpfen – die trägt der Workflow „Veröffentlichen“ bei jedem Release selbst ein und veröffentlicht die Seite neu. Solange `brevoFormUrl` leer ist, zeigt die Seite ehrlich an, dass die E-Mail-Adresse nicht gespeichert wird (kein Mail-Häkchen, passender Absatz im Datenschutz); mit Adresse erscheinen Häkchen und Brevo-Absatz automatisch.
 - `impressum.html` / `datenschutz.html`: Anbieterangaben (beide Seiten stehen auf `noindex`, damit Suchmaschinen die Adresse nicht anzeigen).

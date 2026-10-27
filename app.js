@@ -64,6 +64,24 @@
   if (dlAll) dlAll.href = repoUrl;
   if (dl) dl.href = `${repoUrl}/latest/download/${CFG.apkName || "Jarvis.apk"}`;
   if (dlPc) dlPc.href = `${repoUrl}/latest/download/${CFG.setupName || "Jarvis-Setup.exe"}`;
+  // die neueste Version direkt an den Knöpfen: zuerst aus config.js (keine Anfrage), nach Einwilligung von GitHub
+  const metaA = $("#meta-android"), metaP = $("#meta-pc");
+  const nice = d => { try { return d ? new Date(d.length === 10 ? d + "T12:00:00Z" : d).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : ""; } catch (e) { return ""; } };
+  function setMeta(el, v, extra) {
+    if (!el) return;
+    el.textContent = "";
+    if (!v) return;
+    const b = document.createElement("b");
+    b.textContent = v;
+    el.append("Neueste Version: ", b);
+    if (extra) el.append(" · " + extra);
+  }
+  function showVersions(a, p, date, sizeA, sizeP) {
+    setMeta(metaA, a, [sizeA ? sizeA + " MB" : "", date].filter(Boolean).join(" · "));
+    setMeta(metaP, p, [sizeP ? sizeP + " MB" : "", date].filter(Boolean).join(" · "));
+  }
+  showVersions(CFG.androidVersion, CFG.pcVersion, nice(CFG.versionDate));
+
   async function loadLatest() {
     if (!versionEl || consent() !== "yes") return;
     try {
@@ -75,6 +93,8 @@
       const when = j.published_at ? new Date(j.published_at).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : "";
       const pcv = /PC-Version:\s*v?([0-9][0-9.]*[0-9])/i.exec(j.body || "");
       versionEl.textContent = `Aktuelle Version: Android ${j.tag_name || j.name}${pcv ? " · PC " + pcv[1] : ""}${when ? " · " + when : ""}${apk ? " · APK " + Math.round(apk.size / 1048576) + " MB" : ""}${setup ? " · Setup " + Math.round(setup.size / 1048576) + " MB" : ""}`;
+      showVersions(j.tag_name || j.name || CFG.androidVersion, pcv ? pcv[1] : CFG.pcVersion, when,
+        apk ? Math.round(apk.size / 1048576) : 0, setup ? Math.round(setup.size / 1048576) : 0);
       if (apk && dl) dl.href = apk.browser_download_url;
       if (setup && dlPc) dlPc.href = setup.browser_download_url;
       // the release notes, as plain text (never as HTML), shortened
@@ -85,7 +105,9 @@
     }
   }
   if (consent() === "yes") loadLatest();
-  else if (versionEl) versionEl.textContent = "Versionsnummer wird nach deiner Einwilligung von GitHub geladen.";
+  else if (versionEl) versionEl.textContent = CFG.androidVersion
+    ? `Aktuelle Version: Android ${CFG.androidVersion}${CFG.pcVersion ? " · PC " + CFG.pcVersion : ""}${CFG.versionDate ? " · " + nice(CFG.versionDate) : ""}`
+    : "Versionsnummer wird nach deiner Einwilligung von GitHub geladen.";
 
   // ------------------------------------------------------------------ download against e-mail
   const form = $("#dl-form"), ready = $("#dl-ready"), err = $("#dl-error");

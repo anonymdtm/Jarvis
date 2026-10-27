@@ -7,6 +7,7 @@ on:
     branches: [release]
 permissions:
   contents: write
+  actions: write          # (startet danach die Webseiten-Veröffentlichung, siehe unten)
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -33,6 +34,40 @@ jobs:
             gh release create "$TAG" *.apk *.exe --title "Jarvis $TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
           fi
           echo "url=https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_OUTPUT"
+      - name: Webseite holen (Zweig main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+      - name: Version an den Download-Knöpfen eintragen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          python3 - <<'PY'
+          import datetime, os, re
+          notes = open("NOTES.md", encoding="utf-8").read()
+          m = re.search(r"^\s*PC-Version:\s*v?([0-9][0-9.]*[0-9])", notes, re.I | re.M)
+          values = {"androidVersion": os.environ["TAG"], "versionDate": datetime.date.today().isoformat()}
+          if m:
+              values["pcVersion"] = m.group(1)
+          p = "site/config.js"
+          s = open(p, encoding="utf-8").read()
+          for key, val in values.items():
+              s, n = re.subn(r'(\b' + key + r':\s*")[^"]*(")', lambda mm: mm.group(1) + val + mm.group(2), s, count=1)
+              if n == 0:
+                  s = s.replace("window.JARVIS_SITE = {", 'window.JARVIS_SITE = {\n  ' + key + ': "' + val + '",', 1)
+          open(p, "w", encoding="utf-8").write(s)
+          print("Webseite zeigt jetzt:", values)
+          PY
+          cd site
+          if git diff --quiet; then echo "Die Webseite zeigt diese Version schon."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "Webseite: Version $TAG an den Download-Knöpfen"
+          git push -q origin HEAD:main || { git pull -q --rebase origin main && git push -q origin HEAD:main; }
+          # (ein Push mit diesem Token startet keine anderen Workflows – darum die Webseite hier ausdrücklich veröffentlichen)
+          gh workflow run pages.yml --ref main --repo "$GITHUB_REPOSITORY"
       - name: Mail an die Liste (Brevo)
         env:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
