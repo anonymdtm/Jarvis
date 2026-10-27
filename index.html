@@ -5,16 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jarvis – dein kostenloser KI-Assistent für Android und Windows</title>
 <meta name="description" content="Jarvis hört zu und macht: Nachrichten, Anrufe, Musik, Timer, Wetter, Termine, Erinnerungen – kostenlos, ohne Abo, für Android und Windows-PC. Alles bleibt auf deinem Gerät. Auch für Eltern und Großeltern.">
+<link rel="canonical" href="https://anonymdtm.github.io/Jarvis/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://anonymdtm.github.io/Jarvis/">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Jarvis">
 <meta property="og:title" content="Jarvis – dein kostenloser KI-Assistent">
-<meta property="og:description" content="Du sprichst, Jarvis macht. Kostenlos, ohne Abo, Daten bleiben auf dem Handy.">
-<meta property="og:image" content="video-poster.jpg">
+<meta property="og:description" content="Du sprichst, Jarvis macht. Kostenlos, ohne Abo, für Android und Windows-PC – deine Daten bleiben auf deinem Gerät.">
+<meta property="og:image" content="https://anonymdtm.github.io/Jarvis/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#030A16">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
 <script src="config.js"></script>
-<script>document.documentElement.classList.add("js");</script>
+<script>document.documentElement.classList.add("js");if((window.JARVIS_SITE||{}).brevoFormUrl)document.documentElement.classList.add("brevo");</script>
 </head>
 <body>
+<a class="skip" href="#funktionen">Zum Inhalt springen</a>
 
 <header class="top">
   <div class="wrap">
@@ -119,7 +128,7 @@
       <p class="muted">Jarvis ist eine APK-Datei außerhalb des Play Stores. Android fragt einmal, ob du Apps aus dieser Quelle erlaubst – das ist normal. Die App enthält keine Werbung und kein Tracking.</p>
     </div>
     <div class="steps reveal">
-      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: ZIP entpacken, Jarvis.exe starten.</p></div></div>
+      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: ZIP entpacken, Jarvis.exe starten – beim ersten Mal „Weitere Informationen → Trotzdem ausführen“.</p></div></div>
       <div class="step"><div><h3>Video, Schrift, PIN</h3><p>Das Erklärvideo läuft, dann wählst du die Schriftgröße und eine PIN. Nur du kommst an deine Daten.</p></div></div>
       <div class="step"><div><h3>Erlaubnisse</h3><p>Mikrofon, Kontakte, Benachrichtigungen – Jarvis erklärt jede selbst, du tippst „Erlauben“.</p></div></div>
       <div class="step"><div><h3>KI-Gehirn (optional, kostenlos)</h3><p>Für freie Fragen: einen Gemini-Schlüssel bei Google AI Studio holen und eintragen. Ohne Schlüssel geht trotzdem vieles.</p></div></div>
@@ -133,14 +142,15 @@
       <div>
         <div class="eyebrow">Download</div>
         <h2>Jarvis kostenlos laden</h2>
-        <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC – und eine kurze Mail, wenn es eine neue Version gibt. Keine Werbung, jederzeit abbestellbar.</p>
+        <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC.<span class="only-brevo"> Wenn du magst, schicken wir dir eine kurze Mail, sobald es eine neue Version gibt. Keine Werbung, jederzeit abbestellbar.</span><span class="no-brevo"> Deine Adresse wird dabei nicht gespeichert (<a href="datenschutz.html">Datenschutz</a>); die App sagt dir selbst Bescheid, wenn es eine neue Version gibt.</span></p>
         <p class="version" id="version"></p>
+        <p class="notes" id="notes" hidden></p>
         <p class="notice">Android 11 oder neuer · Windows 10/11. Die Dateien liegen auf GitHub, unserem Download-Server.</p>
       </div>
       <div>
         <form class="form" id="dl-form" novalidate>
           <input type="email" id="email" placeholder="deine@e-mail.de" autocomplete="email" required>
-          <label class="check"><input type="checkbox" id="optin"> Ich möchte per E-Mail über neue Versionen informiert werden und habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen. Abbestellen geht in jeder Mail.</label>
+          <label class="check only-brevo"><input type="checkbox" id="optin"> Ich möchte per E-Mail über neue Versionen informiert werden und habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen. Abbestellen geht in jeder Mail.</label>
           <button class="btn primary" id="dl-submit" type="submit">Weiter zum Download</button>
           <p class="muted" id="dl-error" style="margin:0;font-size:.9rem"></p>
         </form>
@@ -148,8 +158,11 @@
           <p><b>Danke!</b> Hier sind deine Dateien:</p>
           <p><a class="btn primary" id="download-link" href="#">⬇ Jarvis für Android (APK)</a></p>
           <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (ZIP)</a></p>
-          <p class="muted" style="font-size:.9rem">PC: ZIP entpacken und <b>Jarvis.exe</b> starten – ohne Installation. Die Verbindung zum Handy wird in der App unter „PC koppeln“ erklärt.</p>
-          <p class="muted" style="margin-top:12px;font-size:.9rem">Alle Versionen: <a id="releases-link" href="#">GitHub Releases</a></p>
+          <div class="hints">
+            <p><b>Handy:</b> APK antippen → „Installieren“. Fragt Android, ob Apps aus dieser Quelle erlaubt sind: einmal erlauben, das ist bei Apps außerhalb des Play Stores normal.</p>
+            <p><b>PC:</b> ZIP entpacken (Rechtsklick → „Alle extrahieren“) und <b>Jarvis.exe</b> starten – ohne Installation. Zeigt Windows beim ersten Start „Der Computer wurde durch Windows geschützt“: auf <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b> klicken. Der Hinweis kommt, weil Jarvis kein kostenpflichtiges Signatur-Zertifikat hat.</p>
+            <p>Die Verbindung zum Handy wird in der App unter „PC koppeln“ erklärt. Alle Versionen: <a id="releases-link" href="#">GitHub Releases</a></p>
+          </div>
         </div>
       </div>
     </div>
@@ -164,7 +177,7 @@
     <details class="reveal"><summary>Wohin gehen meine Daten?</summary><p>Nachrichten, Kontakte, Gedächtnis, Schlaf- und Schrittdaten bleiben auf dem Handy. Nur das, was du der KI sagst oder fragst, geht an Google (Gemini) – und nur, wenn du den Schlüssel eingetragen hast. Private Dinge wie Nachrichten liest immer die Handystimme vor.</p></details>
     <details class="reveal"><summary>Warum nicht im Play Store?</summary><p>Jarvis ist ein freies Projekt eines einzelnen Entwicklers. Der Weg über die APK-Datei spart die Store-Gebühren und Einschränkungen. Die Dateien liegen auf GitHub – das ist nur der Download-Server, der Quellcode der App ist nicht veröffentlicht.</p></details>
     <details class="reveal"><summary>Welche Geräte?</summary><p>Handy: Android 11 oder neuer, entwickelt und getestet auf Samsung Galaxy. PC: Windows 10 oder 11 – ZIP entpacken, Jarvis.exe starten, keine Installation nötig.</p></details>
-    <details class="reveal"><summary>Wie bekomme ich Updates?</summary><p>Die App sagt dir Bescheid, wenn es eine neue Version gibt. Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</p></details>
+    <details class="reveal"><summary>Wie bekomme ich Updates?</summary><p>Die App sagt dir Bescheid, wenn es eine neue Version gibt. Dann einfach hier die neue Datei laden und darüber installieren; deine Einstellungen bleiben erhalten.<span class="only-brevo"> Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</span></p></details>
   </div>
 </section>
 

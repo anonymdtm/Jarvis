@@ -8,23 +8,24 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="styles.css">
 <script src="config.js"></script>
-<script>document.documentElement.classList.add("js");</script>
+<script>document.documentElement.classList.add("js");if((window.JARVIS_SITE||{}).brevoFormUrl)document.documentElement.classList.add("brevo");</script>
 </head>
 <body>
 <header class="top"><div class="wrap"><a class="brand" href="index.html"><span class="logo">J</span>JARVIS</a><nav><a href="index.html">Zurück zur Startseite</a></nav></div></header>
 <main class="wrap legal">
 <h1>Datenschutzerklärung</h1>
-<p class="muted">Stand: <span class="ph">Datum</span>. Diese Erklärung gilt für die Webseite und für die App Jarvis. <span class="ph">Platzhalter in Orange ersetzen.</span></p>
+<p class="muted">Stand: 27. Oktober 2026. Diese Erklärung gilt für die Webseite und für die App Jarvis.</p>
 <h2>1. Verantwortlicher</h2>
-<p><span class="ph">Vorname Nachname</span>, <span class="ph">Straße Hausnummer, PLZ Ort</span>, E-Mail: <span class="ph">kontakt@beispiel.de</span></p>
+<p>Sebastian Herzog, Palaisstraße 27, 32756 Detmold, E-Mail: <a href="mailto:warpline.games@gmail.com">warpline.games@gmail.com</a></p>
 <h2>2. Hosting (GitHub Pages)</h2>
 <p>Die Webseite wird bei GitHub Pages gehostet (GitHub, Inc., 88 Colin P Kelly Jr St, San Francisco, CA 94107, USA). Beim Aufruf verarbeitet GitHub technisch notwendige Daten wie IP-Adresse, Zeitpunkt, aufgerufene Seite und Browser in Server-Protokollen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Bereitstellung der Seite). GitHub ist unter dem EU-US Data Privacy Framework zertifiziert. Mehr: <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener" target="_blank">GitHub-Datenschutzerklärung</a>.</p>
 <h2>3. Cookies und lokale Speicherung</h2>
 <p>Diese Seite setzt keine Cookies von Drittanbietern und kein Tracking. Deine Entscheidung im Einwilligungs-Banner und ob du den Download bereits freigeschaltet hast, werden ausschließlich in deinem Browser gespeichert (localStorage/sessionStorage) und nicht an uns übertragen.</p>
 <h2>4. Abruf der aktuellen Version (GitHub API)</h2>
-<p>Nur nach deiner Einwilligung im Banner ruft die Seite die aktuelle Versionsnummer über die GitHub-API ab. Dabei wird deine IP-Adresse an GitHub (USA) übertragen. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO. Du kannst die Einwilligung jederzeit über „Einwilligung ändern“ im Fußbereich widerrufen.</p>
-<h2>5. Download und Update-Mails (Brevo)</h2>
-<p>Wenn du deine E-Mail-Adresse einträgst, wird sie an Brevo (Sendinblue GmbH, Köpenicker Str. 126, 10179 Berlin) übermittelt und dort in unserer Empfängerliste gespeichert. Wir nutzen sie ausschließlich, um dich über neue Versionen von Jarvis zu informieren. Die Anmeldung erfolgt im Double-Opt-in-Verfahren. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO. Abmelden kannst du dich über den Link in jeder Mail; danach wird die Adresse gelöscht. Mehr: <a href="https://www.brevo.com/de/legal/privacypolicy/" rel="noopener" target="_blank">Datenschutz bei Brevo</a>. <span class="ph">Diesen Abschnitt entfernen, solange Brevo nicht eingerichtet ist.</span></p>
+<p>Nur nach deiner Einwilligung im Banner ruft die Seite die aktuelle Versionsnummer und die Versionshinweise über die GitHub-API ab. Dabei wird deine IP-Adresse an GitHub (USA) übertragen. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO. Du kannst die Einwilligung jederzeit über „Einwilligung ändern“ im Fußbereich widerrufen. Die Download-Dateien selbst liegen ebenfalls bei GitHub; beim Herunterladen gelten die Datenschutzhinweise von GitHub.</p>
+<h2>5. Download gegen E-Mail-Adresse</h2>
+<p class="no-brevo">Für den Download trägst du eine E-Mail-Adresse ein. Sie wird derzeit <b>nicht</b> an uns oder an Dritte übertragen und nicht gespeichert – die Freischaltung merkt sich nur dein Browser für die laufende Sitzung. Sobald wir Update-Mails anbieten, steht das an dieser Stelle und im Formular, und du entscheidest per Häkchen selbst darüber.</p>
+<p class="only-brevo">Wenn du deine E-Mail-Adresse einträgst und dem Häkchen zustimmst, wird sie an Brevo (Sendinblue GmbH, Köpenicker Str. 126, 10179 Berlin) übermittelt und dort in unserer Empfängerliste gespeichert. Wir nutzen sie ausschließlich, um dich über neue Versionen von Jarvis zu informieren. Die Anmeldung erfolgt im Double-Opt-in-Verfahren. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO. Abmelden kannst du dich über den Link in jeder Mail; danach wird die Adresse gelöscht. Mehr: <a href="https://www.brevo.com/de/legal/privacypolicy/" rel="noopener" target="_blank">Datenschutz bei Brevo</a>.</p>
 <h2>6. Video</h2>
 <p>Das Erklärvideo liegt auf dieser Seite selbst; es werden keine Videoplattformen eingebunden.</p>
 <h2>7. Die App Jarvis</h2>
@@ -33,6 +34,7 @@
 <li><b>Google Gemini</b> (KI-Gehirn, Foto-Erkennung): Deine Frage bzw. das Foto wird an Google übertragen (<a href="https://policies.google.com/privacy" rel="noopener" target="_blank">Google-Datenschutz</a>).</li>
 <li><b>Microsoft</b> (Vorlese-Stimmen, Azure Speech): Der vorzulesende Satz wird an Microsoft übertragen; private Inhalte (Nachrichten) werden immer mit der Handystimme gesprochen.</li>
 <li><b>ElevenLabs</b> (optionale Stimme), <b>Spotify</b> (Musik), <b>Open-Meteo</b> (Wetter, ohne Konto), <b>Discord</b> (optionaler Bot) – jeweils nur bei Nutzung der Funktion.</li>
+<li><b>GitHub</b> (Update-Prüfung): Die App fragt einmal am Tag bei GitHub nach der neuesten Version; dabei wird deine IP-Adresse übertragen. Die Prüfung lässt sich in den Einstellungen abschalten.</li>
 </ul>
 <p>Für die Spracherkennung nutzt die App die auf dem Gerät installierte Erkennung des Systems (z. B. Google). Rechtsgrundlage ist jeweils Art. 6 Abs. 1 lit. a bzw. b DSGVO.</p>
 <h2>8. Deine Rechte</h2>

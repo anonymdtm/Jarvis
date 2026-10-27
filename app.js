@@ -43,8 +43,10 @@
   }
 
   // ------------------------------------------------------------------ reveal on scroll
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
-  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
+    document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+  } else document.querySelectorAll(".reveal").forEach(el => el.classList.add("in"));
 
   // ------------------------------------------------------------------ consent
   function consent() { try { return localStorage.getItem(CONSENT_KEY); } catch (e) { return null; } }
@@ -56,7 +58,7 @@
   $("#consent-open")?.addEventListener("click", e => { e.preventDefault(); banner.classList.add("on"); });
 
   // ------------------------------------------------------------------ latest version (GitHub Releases API, only with consent)
-  const versionEl = $("#version"), dl = $("#download-link"), dlPc = $("#download-pc"), dlAll = $("#releases-link");
+  const versionEl = $("#version"), notesEl = $("#notes"), dl = $("#download-link"), dlPc = $("#download-pc"), dlAll = $("#releases-link");
   const repoUrl = `https://github.com/${CFG.repo}/releases`;
   if (dlAll) dlAll.href = repoUrl;
   if (dl) dl.href = repoUrl + "/latest";
@@ -73,6 +75,9 @@
       versionEl.textContent = `Aktuelle Version: ${j.tag_name || j.name}${when ? " · " + when : ""}${apk ? " · Android " + Math.round(apk.size / 1048576) + " MB" : ""}${zip ? " · PC " + Math.round(zip.size / 1048576) + " MB" : ""}`;
       if (apk && dl) dl.href = apk.browser_download_url;
       if (zip && dlPc) dlPc.href = zip.browser_download_url;
+      // the release notes, as plain text (never as HTML), shortened
+      const body = String(j.body || "").replace(/\r/g, "").replace(/^#+\s*/gm, "").replace(/^[-*]\s+/gm, "• ").replace(/\n{3,}/g, "\n\n").trim();
+      if (notesEl && body) { notesEl.textContent = body.length > 600 ? body.slice(0, 600).replace(/\s+\S*$/, "") + " …" : body; notesEl.hidden = false; }
     } catch (e) {
       versionEl.textContent = "Die neueste Version findest du auf der Release-Seite.";
     }
@@ -86,9 +91,9 @@
     form.addEventListener("submit", async e => {
       e.preventDefault();
       const email = $("#email").value.trim();
-      const ok = $("#optin").checked;
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Bitte eine gültige E-Mail-Adresse eingeben."; return; }
-      if (!ok) { err.textContent = "Bitte bestätige, dass wir dir Update-Mails schicken dürfen."; return; }
+      const ok = $("#optin")?.checked;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Bitte eine gültige E-Mail-Adresse eingeben."; $("#email").focus(); return; }
+      if (CFG.brevoFormUrl && !ok) { err.textContent = "Bitte bestätige, dass wir dir Update-Mails schicken dürfen."; return; }
       err.textContent = "";
       const btn = $("#dl-submit"); btn.disabled = true; btn.textContent = "Einen Moment …";
       if (CFG.brevoFormUrl) {

@@ -7,6 +7,13 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+section, .legal h2 { scroll-margin-top: 80px; }                     /* anchors land below the sticky header */
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+.skip { position: absolute; left: -999px; top: 8px; z-index: 100; background: var(--cyan); color: #03101E; padding: 10px 14px; border-radius: 8px; font-weight: 700; }
+.skip:focus { left: 12px; }
+/* texts that only make sense once the mail list (Brevo) exists – config.js decides, see index.html */
+html:not(.brevo) .only-brevo { display: none !important; }
+html.brevo .no-brevo { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: var(--cyan); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -92,6 +99,9 @@ section.alt { background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 50%, 
 .ready { display: none; }
 .ready.on { display: block; }
 .version { font-size: .9rem; color: var(--muted); margin-top: 10px; }
+.notes { font-size: .9rem; color: var(--muted); white-space: pre-line; max-height: 10.5em; overflow: hidden; margin: 0 0 14px; }
+.hints p { font-size: .9rem; color: var(--muted); margin: 10px 0 0; }
+.hints b { color: var(--text); }
 .notice { font-size: .85rem; color: var(--muted); border-left: 3px solid var(--line-hi); padding-left: 12px; }
 
 /* faq */
@@ -118,4 +128,5 @@ footer a { color: var(--muted); margin-right: 18px; }
 /* reveal on scroll */
 html.js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
 html.js .reveal.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+@media (prefers-reduced-motion: reduce), print { html.js .reveal { opacity: 1; transform: none; transition: none; } }
+@media (max-width: 900px) { #orb { max-width: 300px; } }
