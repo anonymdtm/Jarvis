@@ -71,8 +71,9 @@ jobs:
       - name: Mail an die Liste (Brevo)
         env:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID }}
-          BREVO_SENDER: ${{ secrets.BREVO_SENDER }}
+          # Liste „Jarvis Updates“ (#3) und Absender sind nicht geheim – nur der API-Schlüssel ist ein Secret
+          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID || '3' }}
+          BREVO_SENDER: ${{ secrets.BREVO_SENDER || 'warpline.games@gmail.com' }}
           TAG: ${{ steps.v.outputs.tag }}
         run: |
           if [ -z "$BREVO_API_KEY" ] || [ -z "$BREVO_LIST_ID" ] || [ -z "$BREVO_SENDER" ]; then echo "Brevo nicht eingerichtet – kein Versand."; exit 0; fi
@@ -91,6 +92,9 @@ jobs:
           PY
           )
           BODY=$(python3 -c "import json,os,sys; print(json.dumps({'name':'Jarvis '+os.environ['TAG'],'subject':'Jarvis '+os.environ['TAG']+' ist da','sender':{'name':'Jarvis','email':os.environ['BREVO_SENDER']},'htmlContent':sys.stdin.read(),'recipients':{'listIds':[int(os.environ['BREVO_LIST_ID'])]}}))" <<<"$HTML")
-          ID=$(curl -sS -X POST https://api.brevo.com/v3/emailCampaigns -H "api-key: $BREVO_API_KEY" -H "content-type: application/json" -d "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))")
-          if [ -z "$ID" ]; then echo "Kampagne konnte nicht angelegt werden."; exit 1; fi
-          curl -sS -X POST "https://api.brevo.com/v3/emailCampaigns/$ID/sendNow" -H "api-key: $BREVO_API_KEY" && echo "Mail an die Liste geschickt (Kampagne $ID)."
+          # (die Veröffentlichung ist hier schon fertig – klappt die Mail nicht, steht der Grund im Protokoll, der Lauf bleibt grün)
+          OUT=$(curl -sS -X POST https://api.brevo.com/v3/emailCampaigns -H "api-key: $BREVO_API_KEY" -H "content-type: application/json" -d "$BODY")
+          ID=$(printf '%s' "$OUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+          if [ -z "$ID" ]; then echo "::warning::Brevo: Kampagne nicht angelegt – $(printf '%s' "$OUT" | head -c 300)"; exit 0; fi
+          CODE=$(curl -sS -o /tmp/brevo.txt -w '%{http_code}' -X POST "https://api.brevo.com/v3/emailCampaigns/$ID/sendNow" -H "api-key: $BREVO_API_KEY")
+          if [ "$CODE" = "204" ] || [ "$CODE" = "200" ]; then echo "Mail an die Liste geschickt (Kampagne $ID)."; else echo "::warning::Brevo: Versand nicht gestartet ($CODE) – $(head -c 300 /tmp/brevo.txt)"; fi
