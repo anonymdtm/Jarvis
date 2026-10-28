@@ -1,6 +1,6 @@
 name: Brevo prüfen
 # Prüft nur, ob der Brevo-Schlüssel da ist und angenommen wird – verschickt nichts.
-# Im Protokoll stehen nur HTTP-Codes, nie der Schlüssel oder Adressen.
+# Im Protokoll stehen nur HTTP-Codes und Brevos Fehlertext, nie der Schlüssel oder Adressen.
 on:
   workflow_dispatch:
   push:
@@ -14,11 +14,17 @@ jobs:
     steps:
       - name: Schlüssel prüfen (verschickt nichts)
         env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          RAW_KEY: ${{ secrets.BREVO_API_KEY }}
           BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID || '3' }}
         run: |
-          if [ -z "$BREVO_API_KEY" ]; then echo "::error::Kein Secret BREVO_API_KEY gefunden."; exit 1; fi
-          C=$(curl -s -o /dev/null -w '%{http_code}' "https://api.brevo.com/v3/emailCampaigns?limit=1" -H "api-key: $BREVO_API_KEY" -H "accept: application/json")
-          L=$(curl -s -o /dev/null -w '%{http_code}' "https://api.brevo.com/v3/contacts/lists/$BREVO_LIST_ID" -H "api-key: $BREVO_API_KEY" -H "accept: application/json")
-          echo "::notice::Schlüssel da · Kampagnen HTTP $C · Liste HTTP $L"
-          if [ "$C" != "200" ]; then echo "::error::Brevo nimmt den Schlüssel für Kampagnen nicht an (HTTP $C)."; exit 1; fi
+          if [ -z "$RAW_KEY" ]; then echo "::error::Kein Secret BREVO_API_KEY gefunden."; exit 1; fi
+          KEY=$(printf '%s' "$RAW_KEY" | tr -d '[:space:]')
+          [ "$KEY" = "$RAW_KEY" ] && WS="nein" || WS="ja (wird entfernt)"
+          case "$KEY" in xkeysib-*) KIND="API-Schlüssel (xkeysib-)";; xsmtpsib-*) KIND="SMTP-Schlüssel (xsmtpsib-) – falsche Art";; *) KIND="unbekannte Art";; esac
+          C=$(curl -s -o /tmp/c.json -w '%{http_code}' "https://api.brevo.com/v3/emailCampaigns?limit=1" -H "api-key: $KEY" -H "accept: application/json")
+          L=$(curl -s -o /tmp/l.json -w '%{http_code}' "https://api.brevo.com/v3/contacts/lists/$BREVO_LIST_ID" -H "api-key: $KEY" -H "accept: application/json")
+          why() { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print((d.get('code','') + ': ' + d.get('message',''))[:220])" "$1" 2>/dev/null || echo "-"; }
+          echo "::notice::Schlüssel da · $KIND · Leerzeichen am Rand: $WS · Kampagnen HTTP $C · Liste HTTP $L"
+          if [ "$C" != "200" ]; then echo "::error::Kampagnen HTTP $C – $(why /tmp/c.json)"; fi
+          if [ "$L" != "200" ]; then echo "::warning::Liste HTTP $L – $(why /tmp/l.json)"; fi
+          [ "$C" = "200" ]
