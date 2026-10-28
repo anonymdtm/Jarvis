@@ -122,15 +122,20 @@
       const email = $("#email").value.trim();
       const ok = $("#optin")?.checked;
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Bitte eine gültige E-Mail-Adresse eingeben."; $("#email").focus(); return; }
-      if (CFG.brevoFormUrl && !ok) { err.textContent = "Bitte bestätige, dass wir dir Update-Mails schicken dürfen."; return; }
       err.textContent = "";
       const btn = $("#dl-submit"); btn.disabled = true; btn.textContent = "Einen Moment …";
-      if (CFG.brevoFormUrl) {
+      // only with the tick: the address goes to Brevo (double opt-in – Brevo mails a confirmation link first).
+      // Without it the download works all the same and nothing is sent anywhere.
+      let mailed = false;
+      if (CFG.brevoFormUrl && ok) {
         try {
-          const fd = new FormData(); fd.append("EMAIL", email); fd.append("OPT_IN", "1"); fd.append("email_address_check", ""); fd.append("locale", "de");
+          const fd = new FormData(); fd.append("EMAIL", email); fd.append("email_address_check", ""); fd.append("locale", "de"); fd.append("html_type", "simple");
           await fetch(CFG.brevoFormUrl, { method: "POST", mode: "no-cors", body: fd });
+          mailed = true;
         } catch (e) { /* the download still works – the list is a bonus */ }
       }
+      const note = $("#dl-mailnote");
+      if (note) note.hidden = !mailed;
       form.style.display = "none"; ready.classList.add("on");
       try { sessionStorage.setItem("jarvis.dl", "1"); } catch (e) { }
     });

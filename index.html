@@ -143,7 +143,7 @@
       <div>
         <div class="eyebrow">Download</div>
         <h2>Jarvis kostenlos laden</h2>
-        <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC.<span class="only-brevo"> Wenn du magst, schicken wir dir eine kurze Mail, sobald es eine neue Version gibt. Keine Werbung, jederzeit abbestellbar.</span><span class="no-brevo"> Deine Adresse wird dabei nicht gespeichert (<a href="datenschutz.html">Datenschutz</a>); die App sagt dir selbst Bescheid, wenn es eine neue Version gibt.</span></p>
+        <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC.<span class="only-brevo"> Wenn du magst (Häkchen setzen), schicken wir dir eine kurze Mail, sobald es eine neue Version gibt – keine Werbung, jederzeit abbestellbar. Ohne Häkchen wird deine Adresse nirgends gespeichert.</span><span class="no-brevo"> Deine Adresse wird dabei nicht gespeichert (<a href="datenschutz.html">Datenschutz</a>); die App sagt dir selbst Bescheid, wenn es eine neue Version gibt.</span></p>
         <p class="version" id="version"></p>
         <p class="notes" id="notes" hidden></p>
         <p class="notice">Android 11 oder neuer (entwickelt und getestet auf Samsung Galaxy) · Windows 10/11, ohne Administratorrechte. Die Dateien liegen auf GitHub, unserem Download-Server – die Knöpfe laden direkt die neueste Datei.</p>
@@ -151,12 +151,13 @@
       <div>
         <form class="form" id="dl-form" novalidate>
           <input type="email" id="email" placeholder="deine@e-mail.de" autocomplete="email" required>
-          <label class="check only-brevo"><input type="checkbox" id="optin"> Ich möchte per E-Mail über neue Versionen informiert werden und habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen. Abbestellen geht in jeder Mail.</label>
+          <label class="check only-brevo"><input type="checkbox" id="optin"> Freiwillig: Ich möchte per E-Mail über neue Versionen informiert werden und habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen. Abbestellen geht in jeder Mail.</label>
           <button class="btn primary" id="dl-submit" type="submit">Weiter zum Download</button>
           <p class="muted" id="dl-error" style="margin:0;font-size:.9rem"></p>
         </form>
         <div class="ready" id="dl-ready">
           <p><b>Danke!</b> Hier sind deine Dateien:</p>
+          <p class="notice" id="dl-mailnote" hidden><b>Schau gleich in dein Postfach:</b> Wir haben dir eine Mail mit einem Bestätigungslink geschickt – erst nach dem Klick bist du auf der Update-Liste. Keine Mail da? Dann im Spam-Ordner nachsehen.</p>
           <p><a class="btn primary" id="download-link" href="#">⬇ Jarvis für Android (APK)</a><span class="dlmeta" id="meta-android"></span></p>
           <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (Setup)</a><span class="dlmeta" id="meta-pc"></span></p>
           <div class="hints">

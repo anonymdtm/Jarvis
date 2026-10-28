@@ -12,7 +12,7 @@ window.JARVIS_SITE = {
   versionDate: "2026-10-28",
   // Brevo-Formular: die "action"-Adresse des Formulars aus Brevo (Formulare → dein Formular → "HTML-Code" → form action).
   // Leer lassen, solange es noch kein Brevo-Konto gibt – dann geht der Download ohne E-Mail-Liste.
-  brevoFormUrl: "",
+  brevoFormUrl: "https://7f8431d8.sibforms.com/serve/MUIFAA0E8wn8YrqFYoO5VV62bj5ulf9qCYy2nVBwQX444t4TB8OQu_30rpseTz7n_mQqSgxwYQZIZLy5WIFwPknrcfR2h7m-KEgOxOdUDY4BTuTma3Nuuwyp1SMZefOE3qyBkNmuqAwpWYdfWPxvJZ3sLcPZuRLTVC6KKDZqVTmlAlXCJwtPHl99e-mbJWUk3xtoPIWlxhnF29vRVA==",
   // Social
   instagram: "",
   // Pflichtangaben erscheinen auf impressum.html / datenschutz.html (dort die Platzhalter ersetzen)

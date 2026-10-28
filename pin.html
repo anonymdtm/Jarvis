@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIN vergessen – Jarvis</title>
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .pinbox { max-width: 560px; margin: 0 auto; padding: 56px 0; }
+  .pincode { font: 700 clamp(2.4rem, 11vw, 3.6rem)/1.1 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .14em; color: var(--accent); background: var(--panel); border: 1px solid var(--line-hi); border-radius: var(--radius); padding: 22px 12px; text-align: center; margin: 22px 0 8px; user-select: all; }
+  .pinbox .btn { margin-top: 18px; }
+  .pinbox .small { font-size: .9rem; }
+  .pinbox [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="index.html"><span class="logo">J</span>JARVIS</a><nav><a href="index.html">Zur Startseite</a></nav></div></header>
+<main class="wrap pinbox">
+  <!-- the code from the mail link -->
+  <section id="ok" hidden>
+    <p class="muted" style="margin:0">PIN vergessen</p>
+    <h1 style="margin:.2em 0 0">Dein Code</h1>
+    <div class="pincode" id="code" aria-label="Dein Code"></div>
+    <p id="where">Gib ihn in Jarvis dort ein, wo du „PIN vergessen?“ angeklickt hast. Danach legst du eine neue PIN fest.</p>
+    <p><a class="btn primary" id="openApp" href="#" hidden>In der Jarvis-App öffnen</a></p>
+    <p class="muted small">Der Code gilt eine Stunde und nur einmal. Warst du das nicht? Dann schließ diese Seite einfach – ohne den Code passiert nichts, die PIN bleibt, wie sie ist.</p>
+  </section>
+  <!-- no code (opened by hand, or the link is incomplete) -->
+  <section id="none" hidden>
+    <h1>PIN vergessen?</h1>
+    <p>Diese Seite zeigt den Code aus deiner Mail. Der Link ist unvollständig – öffne ihn direkt aus der Mail, oder fordere in Jarvis einen neuen an: auf dem Sperrbildschirm „PIN vergessen?“ → „Link per E-Mail“.</p>
+  </section>
+  <!-- the app is not on this phone -->
+  <section id="noapp" hidden>
+    <h1>Jarvis ist auf diesem Handy nicht installiert</h1>
+    <p>Gib den Code einfach auf dem Gerät ein, auf dem du „PIN vergessen?“ angeklickt hast.</p>
+  </section>
+</main>
+<footer><div class="wrap"><div>© <span class="year"></span> Warpline Games · Jarvis</div><div><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></div></div></footer>
+<script src="pin.js"></script>
+</body>
+</html>
