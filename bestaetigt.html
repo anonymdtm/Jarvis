@@ -13,9 +13,11 @@
 <main class="wrap legal">
   <h1>Danke – du bist dabei!</h1>
   <p>Deine Anmeldung ist bestätigt. Ab jetzt bekommst du eine kurze Mail, sobald es eine neue Version von Jarvis gibt – fürs Handy und für den PC. Keine Werbung, versprochen. Abmelden kannst du dich jederzeit über den Link in jeder Mail.</p>
+  <p class="muted">Auf diesem Gerät zeigt dir die Jarvis-Seite ab jetzt gleich oben die neueste Version – ohne E-Mail-Eingabe. Gespeichert wird dafür nur ein Merker in deinem Browser, keine E-Mail-Adresse.</p>
   <p><a class="btn primary" href="index.html#download">Zu den Downloads</a></p>
 </main>
 <footer><div class="wrap"><div>© <span class="year">2026</span> Warpline Games · Jarvis</div><div><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></div></div></footer>
-<script>document.querySelectorAll(".year").forEach(function (el) { el.textContent = new Date().getFullYear(); });</script>
+<script>document.querySelectorAll(".year").forEach(function (el) { el.textContent = new Date().getFullYear(); });
+try { localStorage.setItem("jarvis.member", "1"); } catch (e) { /* (private window: then not) */ }</script>
 </body>
 </html>

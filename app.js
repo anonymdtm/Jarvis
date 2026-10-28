@@ -95,6 +95,8 @@
         apk ? Math.round(apk.size / 1048576) : CFG.androidSize, setup ? Math.round(setup.size / 1048576) : CFG.pcSize);
       if (apk && dl) dl.href = apk.browser_download_url;
       if (setup && dlPc) dlPc.href = setup.browser_download_url;
+      if (apk && $("#mb-android")) $("#mb-android").href = apk.browser_download_url;
+      if (setup && $("#mb-pc")) $("#mb-pc").href = setup.browser_download_url;
       // the release notes, as plain text (never as HTML), shortened
       const body = String(j.body || "").replace(/\r/g, "").replace(/^#+\s*/gm, "").replace(/^[-*]\s+/gm, "• ").replace(/\n{3,}/g, "\n\n").trim();
       if (notesEl && body) { notesEl.textContent = body.length > 600 ? body.slice(0, 600).replace(/\s+\S*$/, "") + " …" : body; notesEl.hidden = false; }
@@ -135,6 +137,33 @@
       ready.querySelector(".ready-title")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
     try { if (sessionStorage.getItem("jarvis.dl") === "1") unlock(); } catch (e) { }
+  }
+
+  // ------------------------------------------------------------------ 1.0.38: confirmed subscribers are remembered
+  // Who confirmed the update mails (bestaetigt.html) or comes from the button of an update mail ("?abo=1") gets the
+  // newest version right at the top and the downloads open – on every visit, in this browser. Stored is only "1"
+  // (localStorage "jarvis.member"), never an e-mail address. Everybody else sees the page as before.
+  const MEMBER_KEY = "jarvis.member";
+  const member = () => { try { return localStorage.getItem(MEMBER_KEY) === "1"; } catch (e) { return false; } };
+  const setMember = on => { try { if (on) localStorage.setItem(MEMBER_KEY, "1"); else localStorage.removeItem(MEMBER_KEY); } catch (e) { } };
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get("abo") === "1") {
+      setMember(true);
+      q.delete("abo");
+      history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+    }
+  } catch (e) { }
+  const bar = $("#member-bar");
+  if (bar && member()) {
+    const v = $("#mb-versions");
+    if (v && CFG.androidVersion) v.textContent = `Aktuell: Android ${CFG.androidVersion} · PC ${CFG.pcVersion || "–"}${CFG.versionDate ? " · " + nice(CFG.versionDate) : ""}`;
+    const a = $("#mb-android"), p = $("#mb-pc");
+    if (a && dl) a.href = dl.href;
+    if (p && dlPc) p.href = dlPc.href;
+    bar.hidden = false;
+    if (form && ready) unlock();
+    $("#mb-forget")?.addEventListener("click", () => { setMember(false); bar.hidden = true; });
   }
 
   // ------------------------------------------------------------------ social
