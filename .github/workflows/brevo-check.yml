@@ -1,0 +1,24 @@
+name: Brevo prüfen
+# Prüft nur, ob der Brevo-Schlüssel da ist und angenommen wird – verschickt nichts.
+# Im Protokoll stehen nur HTTP-Codes, nie der Schlüssel oder Adressen.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/brevo-check.yml']
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Schlüssel prüfen (verschickt nichts)
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID || '3' }}
+        run: |
+          if [ -z "$BREVO_API_KEY" ]; then echo "::error::Kein Secret BREVO_API_KEY gefunden."; exit 1; fi
+          C=$(curl -s -o /dev/null -w '%{http_code}' "https://api.brevo.com/v3/emailCampaigns?limit=1" -H "api-key: $BREVO_API_KEY" -H "accept: application/json")
+          L=$(curl -s -o /dev/null -w '%{http_code}' "https://api.brevo.com/v3/contacts/lists/$BREVO_LIST_ID" -H "api-key: $BREVO_API_KEY" -H "accept: application/json")
+          echo "::notice::Schlüssel da · Kampagnen HTTP $C · Liste HTTP $L"
+          if [ "$C" != "200" ]; then echo "::error::Brevo nimmt den Schlüssel für Kampagnen nicht an (HTTP $C)."; exit 1; fi
