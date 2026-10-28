@@ -69,23 +69,16 @@
   if (dlAll) dlAll.href = repoUrl;
   if (dl) dl.href = `${repoUrl}/latest/download/${CFG.apkName || "Jarvis.apk"}`;
   if (dlPc) dlPc.href = `${repoUrl}/latest/download/${CFG.setupName || "Jarvis-Setup.exe"}`;
-  // die neueste Version direkt an den Knöpfen: zuerst aus config.js (keine Anfrage), nach Einwilligung von GitHub
-  const metaA = $("#meta-android"), metaP = $("#meta-pc");
-  const nice = d => { try { return d ? new Date(d.length === 10 ? d + "T12:00:00Z" : d).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : ""; } catch (e) { return ""; } };
-  function setMeta(el, v, extra) {
-    if (!el) return;
-    el.textContent = "";
-    if (!v) return;
-    const b = document.createElement("b");
-    b.textContent = v;
-    el.append("Neueste Version: ", b);
-    if (extra) el.append(" · " + extra);
-  }
+  // Version, Größe und Stand in den beiden Download-Kacheln: zuerst aus config.js (keine Anfrage),
+  // nach Einwilligung frisch von GitHub
+  const nice = d => { try { return d ? new Date(d.length === 10 ? d + "T12:00:00Z" : d).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" }) : ""; } catch (e) { return ""; } };
+  function fact(id, v) { const el = $(id); if (el) el.textContent = v || "–"; }
   function showVersions(a, p, date, sizeA, sizeP) {
-    setMeta(metaA, a, [sizeA ? sizeA + " MB" : "", date].filter(Boolean).join(" · "));
-    setMeta(metaP, p, [sizeP ? sizeP + " MB" : "", date].filter(Boolean).join(" · "));
+    fact("#v-android", a); fact("#v-pc", p);
+    fact("#s-android", sizeA ? sizeA + " MB" : ""); fact("#s-pc", sizeP ? sizeP + " MB" : "");
+    fact("#d-android", date); fact("#d-pc", date);
   }
-  showVersions(CFG.androidVersion, CFG.pcVersion, nice(CFG.versionDate));
+  showVersions(CFG.androidVersion, CFG.pcVersion, nice(CFG.versionDate), CFG.androidSize, CFG.pcSize);
 
   async function loadLatest() {
     if (!versionEl || consent() !== "yes") return;
@@ -98,8 +91,8 @@
       const when = j.published_at ? new Date(j.published_at).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : "";
       const pcv = /PC-Version:\s*v?([0-9][0-9.]*[0-9])/i.exec(j.body || "");
       versionEl.textContent = `Aktuelle Version: Android ${j.tag_name || j.name}${pcv ? " · PC " + pcv[1] : ""}${when ? " · " + when : ""}${apk ? " · APK " + Math.round(apk.size / 1048576) + " MB" : ""}${setup ? " · Setup " + Math.round(setup.size / 1048576) + " MB" : ""}`;
-      showVersions(j.tag_name || j.name || CFG.androidVersion, pcv ? pcv[1] : CFG.pcVersion, when,
-        apk ? Math.round(apk.size / 1048576) : 0, setup ? Math.round(setup.size / 1048576) : 0);
+      showVersions(j.tag_name || j.name || CFG.androidVersion, pcv ? pcv[1] : CFG.pcVersion, nice(j.published_at) || nice(CFG.versionDate),
+        apk ? Math.round(apk.size / 1048576) : CFG.androidSize, setup ? Math.round(setup.size / 1048576) : CFG.pcSize);
       if (apk && dl) dl.href = apk.browser_download_url;
       if (setup && dlPc) dlPc.href = setup.browser_download_url;
       // the release notes, as plain text (never as HTML), shortened
@@ -116,6 +109,7 @@
 
   // ------------------------------------------------------------------ download against e-mail
   const form = $("#dl-form"), ready = $("#dl-ready"), err = $("#dl-error");
+  function unlock() { form.style.display = "none"; ready.classList.add("on"); $("#dl-box")?.classList.add("unlocked"); }
   if (form) {
     form.addEventListener("submit", async e => {
       e.preventDefault();
@@ -136,10 +130,11 @@
       }
       const note = $("#dl-mailnote");
       if (note) note.hidden = !mailed;
-      form.style.display = "none"; ready.classList.add("on");
+      unlock();
       try { sessionStorage.setItem("jarvis.dl", "1"); } catch (e) { }
+      ready.querySelector(".ready-title")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
-    try { if (sessionStorage.getItem("jarvis.dl") === "1") { form.style.display = "none"; ready.classList.add("on"); } } catch (e) { }
+    try { if (sessionStorage.getItem("jarvis.dl") === "1") unlock(); } catch (e) { }
   }
 
   // ------------------------------------------------------------------ social

@@ -129,7 +129,7 @@
       <p><a class="btn" href="anleitung.html">Anleitung mit Bildern – für dein Handy &amp; PC</a></p>
     </div>
     <div class="steps reveal">
-      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen. Handy: APK antippen, „Installieren“. PC: Jarvis-Setup.exe starten, Weiter, Fertig – beim ersten Mal „Weitere Informationen → Trotzdem ausführen“.</p></div></div>
+      <div class="step"><div><h3>Laden und öffnen</h3><p>Unten die E-Mail eintragen und die Datei für dein Gerät laden. Handy: antippen → „Installieren“. PC: Setup starten → Weiter → Fertig.</p></div></div>
       <div class="step"><div><h3>Video, Schrift, PIN</h3><p>Das Erklärvideo läuft, dann wählst du die Schriftgröße und eine PIN. Nur du kommst an deine Daten.</p></div></div>
       <div class="step"><div><h3>Erlaubnisse</h3><p>Mikrofon, Kontakte, Benachrichtigungen – Jarvis erklärt jede selbst, du tippst „Erlauben“.</p></div></div>
       <div class="step"><div><h3>KI-Gehirn (optional, kostenlos)</h3><p>Für freie Fragen: einen kostenlosen Gemini-Schlüssel bei Google AI Studio holen und eintragen. Nur was du dann der KI sagst, geht an Google – Nachrichten, Kontakte, Gedächtnis, Schlaf- und Schrittdaten bleiben auf dem Handy. Ohne Schlüssel geht trotzdem vieles.</p></div></div>
@@ -139,35 +139,80 @@
 
 <section id="download">
   <div class="wrap">
-    <div class="download reveal">
-      <div>
+    <div class="download reveal" id="dl-box">
+      <div class="dl-intro">
         <div class="eyebrow">Download</div>
         <h2>Jarvis kostenlos laden</h2>
-        <p class="muted">Trag deine E-Mail ein, dann bekommst du beide Downloads – die App fürs Handy und das Programm für den Windows-PC.<span class="only-brevo"> Wenn du magst (Häkchen setzen), schicken wir dir eine kurze Mail, sobald es eine neue Version gibt – keine Werbung, jederzeit abbestellbar. Ohne Häkchen wird deine Adresse nirgends gespeichert.</span><span class="no-brevo"> Deine Adresse wird dabei nicht gespeichert (<a href="datenschutz.html">Datenschutz</a>); die App sagt dir selbst Bescheid, wenn es eine neue Version gibt.</span></p>
+        <p class="muted lead">Für dein Android-Handy und deinen Windows-PC – ohne Werbung, ohne Abo.</p>
+        <ul class="ticks">
+          <li>E-Mail eintragen – dann erscheinen beide Downloads.</li>
+          <li class="only-brevo">Update-Mails gibt es nur mit Häkchen. Abmelden geht in jeder Mail.</li>
+          <li class="only-brevo">Ohne Häkchen wird deine Adresse nirgends gespeichert.</li>
+          <li class="no-brevo">Deine Adresse wird nicht gespeichert.</li>
+          <li>Neue Versionen meldet dir Jarvis auch selbst.</li>
+        </ul>
         <p class="version" id="version"></p>
         <p class="notes" id="notes" hidden></p>
-        <p class="notice">Android 11 oder neuer (entwickelt und getestet auf Samsung Galaxy) · Windows 10/11, ohne Administratorrechte. Die Dateien liegen auf GitHub, unserem Download-Server – die Knöpfe laden direkt die neueste Datei.</p>
       </div>
-      <div>
-        <form class="form" id="dl-form" novalidate>
-          <input type="email" id="email" placeholder="deine@e-mail.de" autocomplete="email" required>
-          <label class="check only-brevo"><input type="checkbox" id="optin"> Freiwillig: Ich möchte per E-Mail über neue Versionen informiert werden und habe die <a href="datenschutz.html">Datenschutzerklärung</a> gelesen. Abbestellen geht in jeder Mail.</label>
-          <button class="btn primary" id="dl-submit" type="submit">Weiter zum Download</button>
-          <p class="muted" id="dl-error" style="margin:0;font-size:.9rem"></p>
-        </form>
-        <div class="ready" id="dl-ready">
-          <p><b>Danke!</b> Hier sind deine Dateien:</p>
-          <p class="notice" id="dl-mailnote" hidden><b>Schau gleich in dein Postfach:</b> Wir haben dir eine Mail mit einem Bestätigungslink geschickt – erst nach dem Klick bist du auf der Update-Liste. Keine Mail da? Dann im Spam-Ordner nachsehen.</p>
-          <p><a class="btn primary" id="download-link" href="#">⬇ Jarvis für Android (APK)</a><span class="dlmeta" id="meta-android"></span></p>
-          <p><a class="btn" id="download-pc" href="#">⬇ Jarvis für Windows-PC (Setup)</a><span class="dlmeta" id="meta-pc"></span></p>
-          <div class="hints">
-            <p><b>Schritt für Schritt mit Bildern</b> für Samsung, Xiaomi, Pixel, OnePlus &amp; Co. und für Windows: <a href="anleitung.html">Anleitung öffnen</a></p>
-            <p><b>Handy:</b> APK antippen → „Installieren“. Fragt Android, ob Apps aus dieser Quelle erlaubt sind: einmal erlauben, das ist bei Apps außerhalb des Play Stores normal. Samsung meldet „Unbekannte App gesperrt“? Dann die <b>Automatische Sperre</b> kurz ausschalten (<a href="anleitung.html#samsung">so geht’s</a>). <b>Updates:</b> Jarvis sagt dir Bescheid – neue APK laden und einfach darüber installieren, deine Einstellungen bleiben.<span class="only-brevo"> Wer sich hier eingetragen hat, bekommt zusätzlich eine kurze Mail.</span></p>
-            <p><b>PC:</b> <b>Jarvis-Setup.exe</b> starten → Weiter → Fertig. Jarvis landet in deinem Benutzerordner, mit Verknüpfung auf dem Desktop – ohne Administratorrechte. Zeigt Windows „Der Computer wurde durch Windows geschützt“: auf <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b> klicken. Der Hinweis kommt, weil Jarvis kein kostenpflichtiges Signatur-Zertifikat hat. Updates: einfach das neue Setup starten, deine Einstellungen bleiben.</p>
-            <p><b>Windows 11 sagt „Smart App Control hat eine App blockiert“?</b> Diese Sperre kennt kein „Trotzdem“ – sie lässt nur Programme mit gekauftem Zertifikat zu. Einmalig ausschalten: Start → <b>Windows-Sicherheit</b> → <b>App- &amp; Browsersteuerung</b> → <b>Smart App Control-Einstellungen</b> → <b>Aus</b>, dann das Setup erneut starten. (Lässt sich später nur mit einer Windows-Neuinstallation wieder einschalten; der Virenschutz bleibt davon unberührt.)</p>
-            <p>Die Verbindung zum Handy wird in der App unter „PC koppeln“ erklärt. Alle Versionen: <a id="releases-link" href="#">GitHub Releases</a></p>
-          </div>
+      <form class="form" id="dl-form" novalidate>
+        <label class="sr-only" for="email">Deine E-Mail-Adresse</label>
+        <input type="email" id="email" placeholder="deine@e-mail.de" autocomplete="email" required>
+        <label class="check only-brevo"><input type="checkbox" id="optin"> <span>Freiwillig: Schick mir eine kurze Mail, wenn es eine neue Version gibt. Die <a href="datenschutz.html">Datenschutzerklärung</a> habe ich gelesen.</span></label>
+        <button class="btn primary" id="dl-submit" type="submit">Downloads freischalten</button>
+        <p class="muted" id="dl-error" style="margin:0;font-size:.9rem"></p>
+      </form>
+      <div class="ready" id="dl-ready">
+        <p class="ready-title"><b>Freigeschaltet!</b> Wähl dein Gerät:</p>
+        <p class="notice" id="dl-mailnote" hidden><b>Schau in dein Postfach:</b> Erst nach dem Klick auf den Bestätigungslink bist du auf der Update-Liste. Keine Mail da? Dann im Spam-Ordner nachsehen.</p>
+        <div class="dl-tiles">
+          <article class="dl-tile">
+            <div class="dl-top">
+              <span class="dl-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span>
+              <div><h3>Android</h3><p>Handy &amp; Tablet · ab&nbsp;Android&nbsp;11</p></div>
+            </div>
+            <dl class="dl-facts">
+              <div><dt>Version</dt><dd id="v-android">–</dd></div>
+              <div><dt>Größe</dt><dd id="s-android">–</dd></div>
+              <div><dt>Stand</dt><dd id="d-android">–</dd></div>
+            </dl>
+            <a class="btn primary dl-btn" id="download-link" href="#">⬇ APK herunterladen</a>
+            <p class="dl-foot">Datei antippen → „Installieren“</p>
+          </article>
+          <article class="dl-tile">
+            <div class="dl-top">
+              <span class="dl-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/></svg></span>
+              <div><h3>Windows-PC</h3><p>Windows&nbsp;10&nbsp;&amp;&nbsp;11 · ohne&nbsp;Admin-Rechte</p></div>
+            </div>
+            <dl class="dl-facts">
+              <div><dt>Version</dt><dd id="v-pc">–</dd></div>
+              <div><dt>Größe</dt><dd id="s-pc">–</dd></div>
+              <div><dt>Stand</dt><dd id="d-pc">–</dd></div>
+            </dl>
+            <a class="btn primary dl-btn" id="download-pc" href="#">⬇ Setup herunterladen</a>
+            <p class="dl-foot">Setup starten → Weiter → Fertig</p>
+          </article>
         </div>
+        <details class="help">
+          <summary><span class="help-title">Hilfe bei Installations-Warnungen</span><span class="help-sub">Windows und Android warnen bei Apps außerhalb der Stores – das ist normal.</span></summary>
+          <div class="help-grid">
+            <div>
+              <h4>Android</h4>
+              <ul>
+                <li>Fragt Android, ob Apps aus dieser Quelle erlaubt sind: einmal <b>erlauben</b>.</li>
+                <li>Samsung meldet „Unbekannte App gesperrt“: die <b>Automatische Sperre</b> kurz ausschalten (<a href="anleitung.html#samsung">so geht’s</a>).</li>
+              </ul>
+            </div>
+            <div>
+              <h4>Windows</h4>
+              <ul>
+                <li>„Der Computer wurde durch Windows geschützt“: <b>Weitere Informationen</b> → <b>Trotzdem ausführen</b>. Der Hinweis kommt, weil Jarvis kein gekauftes Signatur-Zertifikat hat.</li>
+                <li>„Smart App Control hat eine App blockiert“: Start → <b>Windows-Sicherheit</b> → <b>App- &amp; Browsersteuerung</b> → <b>Smart App Control</b> → <b>Aus</b>, dann das Setup neu starten. Wieder einschalten geht danach nur mit einer Windows-Neuinstallation – der Virenschutz bleibt aktiv.</li>
+              </ul>
+            </div>
+          </div>
+          <p class="help-more">Mit Bildern für Samsung, Xiaomi, Pixel, OnePlus &amp; Co. und für Windows: <a href="anleitung.html">Anleitung öffnen</a></p>
+        </details>
+        <p class="dl-small">Updates: neue Datei laden und einfach darüber installieren – deine Einstellungen bleiben.<span class="only-brevo"> Mit Häkchen bekommst du zusätzlich eine kurze Mail.</span> Handy und PC verbindest du in der App unter „PC koppeln“. Die Dateien liegen auf GitHub, unserem Download-Server · <a id="releases-link" href="#">Alle Versionen</a></p>
       </div>
     </div>
   </div>

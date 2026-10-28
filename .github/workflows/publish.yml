@@ -51,6 +51,12 @@ jobs:
           values = {"androidVersion": os.environ["TAG"], "versionDate": datetime.date.today().isoformat()}
           if m:
               values["pcVersion"] = m.group(1)
+          # the file sizes for the download tiles (MB, like the page rounds them)
+          import glob
+          for key, pattern in (("androidSize", "*.apk"), ("pcSize", "*.exe")):
+              files = glob.glob(pattern)
+              if files:
+                  values[key] = str(round(os.path.getsize(files[0]) / 1048576))
           p = "site/config.js"
           s = open(p, encoding="utf-8").read()
           for key, val in values.items():
@@ -76,6 +82,7 @@ jobs:
           BREVO_SENDER: ${{ secrets.BREVO_SENDER || 'warpline.games@gmail.com' }}
           TAG: ${{ steps.v.outputs.tag }}
         run: |
+          BREVO_API_KEY=$(printf '%s' "$BREVO_API_KEY" | tr -d '[:space:]')   # (a copied key may end in a line break)
           if [ -z "$BREVO_API_KEY" ] || [ -z "$BREVO_LIST_ID" ] || [ -z "$BREVO_SENDER" ]; then echo "Brevo nicht eingerichtet – kein Versand."; exit 0; fi
           URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
           SITE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
