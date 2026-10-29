@@ -1,0 +1,123 @@
+# Veröffentlicht eine neue Version: Claude legt die Dateien auf dem Zweig "release" ab (VERSION, NOTES.md, Jarvis.apk, Jarvis-Setup.exe),
+# dieser Workflow macht daraus den GitHub-Release – die Webseite und die App sehen ihn automatisch – und schickt danach
+# die Update-Mail an die Brevo-Liste (sobald die drei Secrets eingetragen sind, siehe release-mail.yml).
+name: Veröffentlichen
+on:
+  push:
+    branches: [release]
+permissions:
+  contents: write
+  actions: write          # (startet danach die Webseiten-Veröffentlichung, siehe unten)
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Version lesen
+        id: v
+        run: |
+          echo "tag=$(tr -d ' \n\r' < VERSION)" >> "$GITHUB_OUTPUT"
+          ls -la
+      - name: Release anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG gibt es schon – Dateien werden ersetzt."
+            for old in $(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'); do
+              [ -f "$old" ] || gh release delete-asset "$TAG" "$old" --yes --repo "$GITHUB_REPOSITORY"
+            done
+            gh release upload "$TAG" *.apk *.exe --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" *.apk *.exe --title "Jarvis $TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
+          fi
+          echo "url=https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG" >> "$GITHUB_OUTPUT"
+      - name: Webseite holen (Zweig main)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+      - name: Version an den Download-Knöpfen eintragen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          python3 - <<'PY'
+          import datetime, os, re
+          notes = open("NOTES.md", encoding="utf-8").read()
+          m = re.search(r"^\s*PC-Version:\s*v?([0-9][0-9.]*[0-9])", notes, re.I | re.M)
+          values = {"androidVersion": os.environ["TAG"], "versionDate": datetime.date.today().isoformat()}
+          if m:
+              values["pcVersion"] = m.group(1)
+          # the file sizes for the download tiles (MB, like the page rounds them)
+          import glob
+          for key, pattern in (("androidSize", "*.apk"), ("pcSize", "*.exe")):
+              files = glob.glob(pattern)
+              if files:
+                  values[key] = str(round(os.path.getsize(files[0]) / 1048576))
+          p = "site/config.js"
+          s = open(p, encoding="utf-8").read()
+          for key, val in values.items():
+              s, n = re.subn(r'(\b' + key + r':\s*")[^"]*(")', lambda mm: mm.group(1) + val + mm.group(2), s, count=1)
+              if n == 0:
+                  s = s.replace("window.JARVIS_SITE = {", 'window.JARVIS_SITE = {\n  ' + key + ': "' + val + '",', 1)
+          open(p, "w", encoding="utf-8").write(s)
+          print("Webseite zeigt jetzt:", values)
+          PY
+          cd site
+          if git diff --quiet; then echo "Die Webseite zeigt diese Version schon."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qam "Webseite: Version $TAG an den Download-Knöpfen"
+          git push -q origin HEAD:main || { git pull -q --rebase origin main && git push -q origin HEAD:main; }
+          # (ein Push mit diesem Token startet keine anderen Workflows – darum die Webseite hier ausdrücklich veröffentlichen)
+          gh workflow run pages.yml --ref main --repo "$GITHUB_REPOSITORY"
+      - name: Mail an die Liste (Brevo)
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          # Liste „Jarvis Updates“ (#3) und Absender sind nicht geheim – nur der API-Schlüssel ist ein Secret
+          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID || '3' }}
+          BREVO_SENDER: ${{ secrets.BREVO_SENDER || 'warpline.games@gmail.com' }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          BREVO_API_KEY=$(printf '%s' "$BREVO_API_KEY" | tr -d '[:space:]')   # (a copied key may end in a line break)
+          if [ -z "$BREVO_API_KEY" ] || [ -z "$BREVO_LIST_ID" ] || [ -z "$BREVO_SENDER" ]; then echo "Brevo nicht eingerichtet – kein Versand."; exit 0; fi
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          SITE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
+          export URL SITE
+          HTML=$(python3 - <<'PY'
+          import html, os
+          # the notes: headings ("Handy (1.0.38)") bold, "- " lines as a list – the button leads to the website (1.0.38:
+          # the owner wants the downloads on his page, not on GitHub; "?abo=1" = the page remembers the subscriber)
+          parts, items = [], []
+          def flush():
+              if items:
+                  parts.append("<ul style='margin:4px 0 14px;padding-left:20px'>" + "".join(f"<li style='margin:4px 0'>{i}</li>" for i in items) + "</ul>")
+                  items.clear()
+          for line in open("NOTES.md", encoding="utf-8").read().splitlines():
+              t = line.strip()
+              if not t or t.lower().startswith(("android-version:", "pc-version:")):
+                  flush(); continue
+              if t.startswith("- "):
+                  items.append(html.escape(t[2:]))
+              else:
+                  flush(); parts.append(f"<p style='margin:14px 0 4px;color:#E6F1FF'><b>{html.escape(t)}</b></p>")
+          flush()
+          site = os.environ['SITE']
+          print(f"""<div style='font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#030A16;color:#E6F1FF;padding:28px;border-radius:16px'>
+          <h2 style='color:#46E0FF;margin:0 0 12px'>Jarvis {os.environ['TAG']} ist da</h2>
+          <p>Es gibt eine neue Version von Jarvis – fürs Handy und für den PC.</p>
+          <div style='color:#B9C7DE;font-size:15px;line-height:1.5'>{''.join(parts)}</div>
+          <p style='margin:22px 0'><a href='{site}?abo=1#download' style='background:#2FA8FF;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold'>Neue Version auf der Jarvis-Seite laden</a></p>
+          <p style='color:#7F98BC;font-size:12px'>Du bekommst diese Mail, weil du dich auf <a href='{site}' style='color:#7F98BC'>der Jarvis-Seite</a> eingetragen hast. <a href='{{{{ unsubscribe }}}}' style='color:#7F98BC'>Abmelden</a></p></div>""")
+          PY
+          )
+          BODY=$(python3 -c "import json,os,sys; print(json.dumps({'name':'Jarvis '+os.environ['TAG'],'subject':'Jarvis '+os.environ['TAG']+' ist da','sender':{'name':'Jarvis','email':os.environ['BREVO_SENDER']},'htmlContent':sys.stdin.read(),'recipients':{'listIds':[int(os.environ['BREVO_LIST_ID'])]}}))" <<<"$HTML")
+          # (die Veröffentlichung ist hier schon fertig – klappt die Mail nicht, steht der Grund im Protokoll, der Lauf bleibt grün)
+          OUT=$(curl -sS -X POST https://api.brevo.com/v3/emailCampaigns -H "api-key: $BREVO_API_KEY" -H "content-type: application/json" -d "$BODY")
+          ID=$(printf '%s' "$OUT" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null)
+          if [ -z "$ID" ]; then echo "::warning::Brevo: Kampagne nicht angelegt – $(printf '%s' "$OUT" | head -c 300)"; exit 0; fi
+          CODE=$(curl -sS -o /tmp/brevo.txt -w '%{http_code}' -X POST "https://api.brevo.com/v3/emailCampaigns/$ID/sendNow" -H "api-key: $BREVO_API_KEY")
+          if [ "$CODE" = "204" ] || [ "$CODE" = "200" ]; then echo "Mail an die Liste geschickt (Kampagne $ID)."; else echo "::warning::Brevo: Versand nicht gestartet ($CODE) – $(head -c 300 /tmp/brevo.txt)"; fi
