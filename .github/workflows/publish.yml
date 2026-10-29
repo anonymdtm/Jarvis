@@ -89,6 +89,7 @@ jobs:
           export URL SITE
           HTML=$(python3 - <<'PY'
           import html, os
+          # 1.0.39: the button is a table cell with a short label – a wrapped inline link broke apart in the Gmail app
           # the notes: headings ("Handy (1.0.38)") bold, "- " lines as a list – the button leads to the website (1.0.38:
           # the owner wants the downloads on his page, not on GitHub; "?abo=1" = the page remembers the subscriber)
           parts, items = [], []
@@ -110,7 +111,7 @@ jobs:
           <h2 style='color:#46E0FF;margin:0 0 12px'>Jarvis {os.environ['TAG']} ist da</h2>
           <p>Es gibt eine neue Version von Jarvis – fürs Handy und für den PC.</p>
           <div style='color:#B9C7DE;font-size:15px;line-height:1.5'>{''.join(parts)}</div>
-          <p style='margin:22px 0'><a href='{site}?abo=1#download' style='background:#2FA8FF;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold'>Neue Version auf der Jarvis-Seite laden</a></p>
+          <table role='presentation' cellspacing='0' cellpadding='0' border='0' style='margin:22px 0'><tr><td bgcolor='#2FA8FF' style='background:#2FA8FF;border-radius:999px'><a href='{site}?abo=1#download' style='display:inline-block;padding:13px 26px;font-family:Arial,sans-serif;font-size:16px;line-height:20px;color:#ffffff;text-decoration:none;font-weight:bold;border-radius:999px;white-space:nowrap'>Neue Version laden</a></td></tr></table>
           <p style='color:#7F98BC;font-size:12px'>Du bekommst diese Mail, weil du dich auf <a href='{site}' style='color:#7F98BC'>der Jarvis-Seite</a> eingetragen hast. <a href='{{{{ unsubscribe }}}}' style='color:#7F98BC'>Abmelden</a></p></div>""")
           PY
           )
