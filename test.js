@@ -188,6 +188,19 @@ const upstream = http.createServer((req, res) => {
       assert.equal(resetHour(new Date("2026-07-03T10:00:00Z")), "2");
       ok("„ab 1 Uhr“ im Winter, „ab 2 Uhr“ im Sommer (OpenRouter zählt den UTC-Tag)");
       assert.equal(keepAwake(), null); ok("ohne Render-Adresse kein Selbst-Aufwecken (im Test)");
+      // --- Modellauswahl der App: das gewünschte Modell zuerst, die anderen als Ersatz
+      busy.clear(); ipNo = 11; calls = [];
+      const w1 = await (await post({ ...hi, task: "code", prefer: ["nemotron-nano-12b", "nemotron"], stream: false }, { "x-device": "geraet-wahl-0001" })).json();
+      const pw = calls.filter((c) => c.startsWith("POST"));
+      assert.ok(pw[0].includes("nemotron-nano-12b-v2-vl"), pw.join(" | "));
+      assert.equal(w1.text, "Default");
+      calls = [];
+      await (await post({ ...look, prefer: ["north-mini-code", "gemma-4"] }, { "x-device": "geraet-wahl-0002" })).json();
+      assert.ok(calls.filter((c) => c.startsWith("POST"))[0].includes("gemma-4"), "bei Bildern nur ein Modell, das sehen kann");
+      for (const bad of [["<script>"], "nemotron", Array(7).fill("gemma"), [5]]) {
+        assert.equal((await post({ ...hi, prefer: bad }, { "x-device": "geraet-wahl-0003" })).status, 400, JSON.stringify(bad));
+      }
+      ok("Modell-Wunsch der App zuerst (bei Bildern nur sehende Modelle), kaputte Wünsche → 400");
       // --- Limit pro Gerät (6/min)
       ipNo = 5;
       let last = 200;

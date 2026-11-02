@@ -4,6 +4,7 @@
 //
 // App → POST /v1/chat   { "messages":[{"role":"user","content":"Hallo"}], "system":"…", "task":"chat"|"code"|"vision", "stream":true }
 //       bei "vision" zusätzlich "image":{"mime":"image/jpeg","data":"<base64>"} („Was ist das?“ – Foto, Screenshot, Bild)
+//       freiwillig "prefer":["nemotron-3.5-super","nemotron"] – das Modell aus der Modellauswahl der App (Teile der Namen)
 //       Kopfzeilen: x-jarvis-token (APP_TOKEN), x-device (zufällige Geräte-ID der App)
 // Antwort (stream:true):  data: {"delta":"Hal"}\n\n … data: {"done":true,"model":"…"}\n\n
 // Antwort (stream:false): {"text":"…","model":"…"}
@@ -130,9 +131,17 @@ function checkBody(body) {
   } else if (body.image !== undefined) {
     throw new Bad("ein Bild nur bei task vision");
   }
+  // der Modell-Wunsch der App (Modellauswahl, oder „ein starkes“ für eine schwere Frage): Teile von OpenRouter-Namen, das beste zuerst
+  let prefer = [];
+  if (body.prefer !== undefined) {
+    if (!Array.isArray(body.prefer) || body.prefer.length > 6 || !body.prefer.every((p) => typeof p === "string" && /^[a-z0-9.:\/_-]{2,80}$/.test(p))) {
+      throw new Bad("kaputter Modell-Wunsch");
+    }
+    prefer = body.prefer;
+  }
   const mt = Number(body.max_tokens);
   const maxTokens = Number.isFinite(mt) ? Math.min(Math.max(Math.round(mt), 16), 4000) : 800;
-  return { messages: messages.slice(-30), system, task, image, maxTokens, stream: body.stream !== false };
+  return { messages: messages.slice(-30), system, task, image, prefer, maxTokens, stream: body.stream !== false };
 }
 
 // ---------------------------------------------------------------- die kostenlosen OpenRouter-Modelle (Liste alle 12 Stunden)
@@ -300,7 +309,19 @@ async function* openrouter(model, system, messages, maxTokens, image) {
 
 /** Geht die Modellliste durch, bis eines Text liefert. Hat ein Modell schon angefangen, bleibt es dabei – bricht es dann ab,
  *  endet die Antwort dort (nie zwei Modelle in einer Antwort). */
-async function* answer(task, system, messages, maxTokens, log, image = null) {
+/** Das gewünschte kostenlose Modell (Modellauswahl der App) – null, wenn es keins gibt. Bei Bildern nur eins, das sehen kann. */
+async function wished(prefer, task) {
+  if (!prefer || !prefer.length) return null;
+  const f = await freeModels();
+  const ids = task === "vision" ? f.vision : f.ids;
+  for (const p of prefer) {
+    const m = ids.find((x) => x !== "openrouter/free" && x.includes(p));
+    if (m) return "or:" + m;
+  }
+  return null;
+}
+
+async function* answer(task, system, messages, maxTokens, log, image = null, prefer = []) {
   const entries = task === "code" ? CFG.code : task === "vision" ? CFG.vision : CFG.chat;
   const resolved = [];
   for (const raw of entries) {
@@ -308,7 +329,10 @@ async function* answer(task, system, messages, maxTokens, log, image = null) {
     if (entry && !resolved.includes(entry)) resolved.push(entry);
   }
   // (gerade überlastete Modelle zuletzt – aber trotzdem noch versuchen, vielleicht sind sie wieder da)
-  const order = resolved.filter((e) => !isBusy(e)).concat(resolved.filter(isBusy));
+  let order = resolved.filter((e) => !isBusy(e)).concat(resolved.filter(isBusy));
+  // der Wunsch der App zuerst (auch wenn es eben überlastet war – die anderen bleiben als Ersatz dahinter)
+  const wish = await wished(prefer, task);
+  if (wish) order = [wish].concat(order.filter((e) => e !== wish));
   for (const entry of order) {
     const [kind, ...rest] = entry.split(":");
     const model = rest.join(":");
@@ -371,7 +395,7 @@ const server = http.createServer(async (req, res) => {
     const cap = allowedAll();
     if (cap) return send(res, 429, { error: cap });
 
-    const gen = answer(input.task, input.system, input.messages, input.maxTokens, log, input.image);
+    const gen = answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer);
     if (!input.stream) {
       let text = "", model = "";
       try {

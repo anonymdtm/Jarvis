@@ -67,7 +67,7 @@ pro Frage allerdings nur einen Bruchteil eines Cents.
 
 ## 8. Test auf dem eigenen Rechner
 `node test.js` startet falsche Google- und OpenRouter-Server und prüft Streaming, Modellwechsel, Token-Schutz, alle Limits,
-die Eingabeprüfung, Bilder, überlastete Modelle, das Tageskontingent und die Standard-Einstellung (28 Prüfungen).
+die Eingabeprüfung, Bilder, überlastete Modelle, das Tageskontingent und die Standard-Einstellung (29 Prüfungen).
 
 ## 9. So spricht die App mit dem Server
 `POST /v1/chat`, Kopfzeilen `x-jarvis-token` und `x-device` (zufällige ID des Geräts), Body:
@@ -75,4 +75,6 @@ die Eingabeprüfung, Bilder, überlastete Modelle, das Tageskontingent und die S
 Bei `vision` („Was ist das?“ mit Foto, Screenshot oder Bild) zusätzlich `"image":{"mime":"image/jpeg","data":"<base64>"}`
 (höchstens gut 1 MB – die App verkleinert vorher). Es antworten nur Gratis-Modelle, die Bilder ansehen können
 (`MODELS_VISION`, Standard `or:@vision,or:@vision2,or:openrouter/free`).
+Freiwillig `"prefer":["nemotron-3.5-super","nemotron"]`: das Modell, das in der App unter „Modellauswahl“ gewählt ist (Teile der
+OpenRouter-Namen, das beste zuerst). Es wird zuerst gefragt, die anderen bleiben als Ersatz dahinter.
 Antwort als Strom: `data: {"delta":"Text"}` … `data: {"done":true,"model":"…"}`.
