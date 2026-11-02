@@ -1,0 +1,1 @@
+{"name": "jarvis-proxy", "version": "1.0.2", "private": true, "main": "server.js", "engines": {"node": ">=20"}, "scripts": {"start": "node server.js", "test": "node test.js"}}
