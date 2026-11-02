@@ -6,7 +6,7 @@ Programmieren Cohere North Mini Code, bei „Was ist das?“ ein Modell, das Bil
 
 ## So geht's
 
-1. Öffne diesen Link: **https://render.com/deploy?repo=https://github.com/anonymdtm/jarvis/tree/proxy**
+1. Öffne diesen Link: **https://render.com/deploy?repo=https://github.com/anonymdtm/Jarvis/tree/proxy**
 2. Melde dich bei Render an (am einfachsten mit „GitHub“). Kostenlos, keine Kreditkarte.
 3. Render zeigt „jarvis-warpline“ und fragt nach zwei Werten:
    - **OPENROUTER_API_KEY** → dein Schlüssel von openrouter.ai (Keys → Create Key)

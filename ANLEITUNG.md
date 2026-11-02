@@ -9,8 +9,8 @@ beste gerade kostenlose Modell (NVIDIA Nemotron, Google Gemma, beim Programmiere
 Die kostenlosen Modelle sucht der Server selbst aus der aktuellen Gratis-Liste von OpenRouter – die ändert sich oft.
 
 ## 2. Kostenlos hosten (Render) – mit einem Klick
-Der Code liegt schon im Zweig `proxy` deines GitHub-Repos `jarvis`, zusammen mit `render.yaml` (der Bauplan für Render).
-1. Link öffnen: https://render.com/deploy?repo=https://github.com/anonymdtm/jarvis/tree/proxy
+Der Code liegt schon im Zweig `proxy` deines GitHub-Repos `Jarvis`, zusammen mit `render.yaml` (der Bauplan für Render).
+1. Link öffnen: https://render.com/deploy?repo=https://github.com/anonymdtm/Jarvis/tree/proxy
 2. Bei Render anmelden (mit GitHub, kostenlos, ohne Kreditkarte).
 3. Render fragt nach zwei Werten:
    - `OPENROUTER_API_KEY` = dein OpenRouter-Schlüssel
@@ -20,7 +20,7 @@ Der Code liegt schon im Zweig `proxy` deines GitHub-Repos `jarvis`, zusammen mit
 6. Schick Claude **nur die Adresse** (nie den OpenRouter-Schlüssel) – dann wird sie fest in die App eingebaut.
 
 ## 3. Ohne den Ein-Klick-Link (falls Render etwas ändert)
-render.com → New → Web Service → Repo `jarvis`, Zweig `proxy` → Runtime Node, Build `npm install --omit=dev`,
+render.com → New → Web Service → Repo `Jarvis`, Zweig `proxy` → Runtime Node, Build `npm install --omit=dev`,
 Start `node server.js`, Plan Free, Region Frankfurt → unter Environment die zwei Werte aus Schritt 2.3 eintragen.
 
 ## 4. Was kostet das? – Nichts, solange du nichts kaufst

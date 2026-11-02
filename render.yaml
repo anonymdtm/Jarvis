@@ -1,5 +1,5 @@
 # Jarvis-Server auf Render – kostenlos, mit einem Klick:
-#   https://render.com/deploy?repo=https://github.com/anonymdtm/jarvis/tree/proxy
+#   https://render.com/deploy?repo=https://github.com/anonymdtm/Jarvis/tree/proxy
 # Render fragt dabei nach den zwei Werten unten (OPENROUTER_API_KEY und APP_TOKEN) – nie in eine Datei schreiben.
 services:
   - type: web
