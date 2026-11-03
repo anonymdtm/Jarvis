@@ -87,6 +87,11 @@ section.alt { background: var(--bg2); }
 /* video */
 .video { border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: #000; max-width: 420px; margin: 0 auto; }
 .video video { width: 100%; height: auto; }
+.trailer { border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: #000; max-width: 1040px; margin: 26px auto 14px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+.trailer video { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: #000; }
+@media (max-width: 700px) and (orientation: portrait) { .trailer { max-width: 420px; } .trailer video { aspect-ratio: 9 / 16; } }
+.center { text-align: center; }
+#trailer p.small { font-size: .92rem; margin: 0 auto; max-width: 40rem; }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
 @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
 
@@ -335,3 +340,41 @@ html.js .reveal.in { opacity: 1; transform: none; }
 .wmock .rad.on::after { content: ""; position: absolute; inset: .9cqw; border-radius: 50%; background: #4CC2FF; }
 .gstep.noshot { grid-template-columns: 44px minmax(0, 1fr); }
 @media (max-width: 900px) { .gstep.noshot { grid-template-columns: 30px minmax(0, 1fr); } }
+
+/* 1.0.40 – übersichtlicher: Videos nebeneinander, kurze Karten, Familien-Leiste, „Außerdem“-Zeile */
+.duo { display: grid; grid-template-columns: 1.55fr 1fr; gap: 26px; align-items: end; margin-top: 26px; }
+.duo figure { margin: 0; }
+.duo .trailer { margin: 0; max-width: none; }
+.duo .video { max-width: 300px; }
+.duo figcaption { color: var(--muted); font-size: .92rem; text-align: center; padding-top: 10px; }
+.duo figcaption b { color: var(--text); }
+@media (max-width: 900px) { .duo { grid-template-columns: 1fr; } .duo .video { max-width: 320px; } }
+.grid.four { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 1000px) { .grid.four { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .grid.four { grid-template-columns: 1fr; } }
+.card.compact { padding: 18px; }
+.card.compact .ic { width: 38px; height: 38px; margin-bottom: 10px; }
+.card.compact h3 { font-size: 1.02rem; margin-bottom: 4px; }
+.card.compact p { font-size: .9rem; }
+.card .new { font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft);
+  padding: 2px 7px; border-radius: 99px; margin-left: 6px; vertical-align: 2px; }
+.family { margin-top: 22px; display: grid; grid-template-columns: 240px 1fr; gap: 22px; align-items: center; background: var(--panel);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; scroll-margin-top: 90px; }
+.family-head .eyebrow { display: block; margin-bottom: 6px; }
+.family-head p { margin: 0; color: var(--muted); font-size: .95rem; }
+.family-items { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.family-items div { display: flex; flex-direction: column; gap: 2px; border-left: 2px solid var(--line); padding-left: 12px; }
+.family-items b { font-size: .95rem; }
+.family-items span { color: var(--muted); font-size: .86rem; }
+@media (max-width: 1000px) { .family { grid-template-columns: 1fr; } .family-items { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .family-items { grid-template-columns: 1fr; } }
+.tags { margin: 18px 0 0; color: var(--muted); font-size: .92rem; text-align: center; }
+.tags span { color: var(--text); font-weight: 700; margin-right: 4px; }
+@media (max-width: 520px) {
+  .card.compact { display: grid; grid-template-columns: 38px 1fr; column-gap: 14px; align-items: start; padding: 14px 16px; }
+  .card.compact .ic { grid-row: span 2; margin: 2px 0 0; }
+  .card.compact h3 { margin: 0 0 2px; }
+  .grid.four { gap: 10px; }
+  .duo .video { max-width: 260px; }
+  .family { padding: 18px; }
+}

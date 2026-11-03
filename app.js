@@ -47,6 +47,13 @@
     frame();
   }
 
+  // ------------------------------------------------------------------ the trailer: 16:9 on wide screens, 9:16 on phones held upright
+  // (the film itself is chosen by the <source media=…>, so nothing loads before "play"; here only the poster follows)
+  {
+    const v = $("#trailerVideo");
+    if (v && window.matchMedia && window.matchMedia("(max-width: 700px) and (orientation: portrait)").matches) v.poster = v.dataset.posterTall;
+  }
+
   // ------------------------------------------------------------------ reveal on scroll
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
@@ -117,7 +124,7 @@
       e.preventDefault();
       const email = $("#email").value.trim();
       const ok = $("#optin")?.checked;
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Bitte eine gültige E-Mail-Adresse eingeben."; $("#email").focus(); return; }
+      if (email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Bitte eine gültige E-Mail-Adresse eingeben."; $("#email").focus(); return; }
       err.textContent = "";
       const btn = $("#dl-submit"); btn.disabled = true; btn.textContent = "Einen Moment …";
       // only with the tick: the address goes to Brevo (double opt-in – Brevo mails a confirmation link first).
