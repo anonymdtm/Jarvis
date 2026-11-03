@@ -86,7 +86,7 @@ section.alt { background: var(--bg2); }
 
 /* video */
 .video { border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: #000; max-width: 420px; margin: 0 auto; }
-.video video { width: 100%; height: auto; }
+.video video { width: 100%; height: auto; aspect-ratio: 9 / 16; }   /* (its room is kept before the poster arrives – no jump) */
 .trailer { border-radius: 24px; overflow: hidden; border: 1px solid var(--line); background: #000; max-width: 1040px; margin: 26px auto 14px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
 .trailer video { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; background: #000; }
 @media (max-width: 700px) and (orientation: portrait) { .trailer { max-width: 420px; } .trailer video { aspect-ratio: 9 / 16; } }
@@ -99,7 +99,7 @@ section.alt { background: var(--bg2); }
 .phones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 @media (max-width: 760px) { .phones { grid-template-columns: 1fr; } }
 .phone { border-radius: 28px; border: 1px solid var(--line); background: #0A0F1C; padding: 10px; box-shadow: var(--shadow); }
-.phone img { border-radius: 20px; }
+.phone img { border-radius: 20px; width: 100%; height: auto; }      /* (width/height in the HTML: room kept while loading) */
 .phone figcaption { text-align: center; color: #E3EAF4; font-size: .9rem; padding: 12px 6px 4px; }
 
 /* steps */

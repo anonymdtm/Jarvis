@@ -173,6 +173,25 @@
     $("#mb-forget")?.addEventListener("click", () => { setMember(false); bar.hidden = true; });
   }
 
+  // ------------------------------------------------------------------ 1.0.41: a link to "#download" really lands there
+  // (the user, 3.11.: the update mail's "Neue Version laden" ended up in the middle of the page – pictures above the
+  // downloads came in after the jump and pushed them down). Until you scroll yourself, the target is kept in view.
+  try {
+    const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (target) {
+      let moved = false;
+      ["wheel", "touchmove", "keydown", "mousedown"].forEach(ev => addEventListener(ev, () => { moved = true; }, { once: true, passive: true }));
+      const go = () => { if (!moved) target.scrollIntoView({ block: "start" }); };
+      go();
+      addEventListener("load", () => { go(); setTimeout(go, 400); setTimeout(go, 1200); });
+      if ("ResizeObserver" in window) {
+        const ro = new ResizeObserver(() => go());
+        ro.observe(document.body);
+        setTimeout(() => ro.disconnect(), 10000);
+      }
+    }
+  } catch (e) { }
+
   // ------------------------------------------------------------------ social
   const ig = $("#instagram");
   if (ig) { if (CFG.instagram) { ig.href = "https://instagram.com/" + CFG.instagram.replace(/^@/, ""); ig.textContent = "Instagram"; } else ig.remove(); }
