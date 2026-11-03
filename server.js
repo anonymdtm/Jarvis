@@ -238,9 +238,14 @@ async function* sse(res) {
   if (rest) yield rest;
 }
 
-async function open(url, init, kind = "or") {
+async function open(url, init, kind = "or", outside = null) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), CFG.firstByteMs);
+  // (ein anderes Modell war schneller – diese Anfrage wird abgebrochen)
+  if (outside) {
+    if (outside.aborted) ac.abort();
+    else outside.addEventListener("abort", () => ac.abort(), { once: true });
+  }
   try {
     const res = await fetch(url, { ...init, signal: ac.signal });
     if (!res.ok) {
@@ -263,7 +268,7 @@ async function open(url, init, kind = "or") {
   }
 }
 
-async function* gemini(model, system, messages, maxTokens, image) {
+async function* gemini(model, system, messages, maxTokens, image, signal = null) {
   if (!CFG.geminiKey) throw new Retry("kein Google-Schlüssel");
   const body = {
     contents: messages.map((m, i) => ({
@@ -274,7 +279,7 @@ async function* gemini(model, system, messages, maxTokens, image) {
   };
   if (system) body.systemInstruction = { parts: [{ text: system }] };
   const { res, timer } = await open(`${CFG.geminiBase}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`,
-    { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": CFG.geminiKey }, body: JSON.stringify(body) }, "gemini");
+    { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": CFG.geminiKey }, body: JSON.stringify(body) }, "gemini", signal);
   try {
     for await (const data of sse(res)) {
       let j; try { j = JSON.parse(data); } catch { continue; }
@@ -285,7 +290,7 @@ async function* gemini(model, system, messages, maxTokens, image) {
   } finally { clearTimeout(timer); }
 }
 
-async function* openrouter(model, system, messages, maxTokens, image) {
+async function* openrouter(model, system, messages, maxTokens, image, signal = null) {
   if (!CFG.openrouterKey) throw new Retry("kein OpenRouter-Schlüssel");
   // (ein Bild hängt an der letzten Nachricht – so wie OpenAI es erwartet)
   const withImage = messages.map((m, i) => (image && i === messages.length - 1
@@ -297,7 +302,7 @@ async function* openrouter(model, system, messages, maxTokens, image) {
     headers: { "content-type": "application/json", authorization: `Bearer ${CFG.openrouterKey}`, "x-title": "Jarvis" },
     // (Denk-Modelle zählen ihr Nachdenken in max_tokens mit – Platz dafür lassen, die Antwort bleibt durch den Prompt kurz)
     body: JSON.stringify({ model, messages: msgs, max_tokens: Math.min(8000, Math.max(1500, maxTokens * 4)), stream: true }),
-  });
+  }, "or", signal);
   try {
     for await (const data of sse(res)) {
       if (data === "[DONE]") break;
@@ -323,6 +328,15 @@ async function wished(prefer, task) {
   return null;
 }
 
+/** Wie schnell ein Modell zuletzt das erste Wort lieferte (ms, gleitender Mittelwert) – bei Bildern kommt das schnellste zuerst. */
+const speed = new Map();
+function noteSpeed(entry, ms) {
+  const old = speed.get(entry);
+  speed.set(entry, old === undefined ? ms : Math.round(old * 0.6 + ms * 0.4));
+}
+/** Nach so vielen ms ohne erstes Wort fragt der Server zusätzlich das nächste Modell – wer zuerst antwortet, gewinnt. */
+const HEDGE = { vision: Number(env.HEDGE_VISION_MS || 6000), chat: Number(env.HEDGE_CHAT_MS || 8000), code: Number(env.HEDGE_CODE_MS || 12000) };
+
 async function* answer(task, system, messages, maxTokens, log, image = null, prefer = []) {
   const entries = task === "code" ? CFG.code : task === "vision" ? CFG.vision : CFG.chat;
   const resolved = [];
@@ -331,33 +345,89 @@ async function* answer(task, system, messages, maxTokens, log, image = null, pre
     if (entry && !resolved.includes(entry)) resolved.push(entry);
   }
   // (gerade überlastete Modelle zuletzt – aber trotzdem noch versuchen, vielleicht sind sie wieder da)
-  let order = resolved.filter((e) => !isBusy(e)).concat(resolved.filter(isBusy));
+  let ready = resolved.filter((e) => !isBusy(e));
+  // 1.0.45: bei Bildern das zuletzt schnellste zuerst (der Nutzer, 3.11.: „4, 5 Minuten, bis eine Antwort kommt“)
+  if (task === "vision") {
+    const rank = (e) => (speed.has(e) ? speed.get(e) : 8000);
+    ready = ready.map((e, i) => [e, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((x) => x[0]);
+  }
+  let order = ready.concat(resolved.filter(isBusy));
   // der Wunsch der App zuerst (auch wenn es eben überlastet war – die anderen bleiben als Ersatz dahinter)
   const wish = await wished(prefer, task);
   if (wish) order = [wish].concat(order.filter((e) => e !== wish));
-  for (const entry of order) {
+  const t0 = Date.now();
+  const runs = [];
+  let next = 0;
+  const launch = () => {
+    if (next >= order.length) return false;
+    const entry = order[next++];
     const [kind, ...rest] = entry.split(":");
-    const model = rest.join(":");
-    let started = false;
-    try {
-      const gen = (kind === "gemini" ? gemini : openrouter)(model, system, messages, maxTokens, image);
-      for await (const piece of gen) { started = true; yield { text: piece, model: entry }; }
-      if (started) { busy.delete(entry); return; }
-      busy.set(entry, Date.now() + CFG.busyMs);
-      log(`Modell ${entry}: leere Antwort`);
-    } catch (e) {
+    const ac = new AbortController();
+    const it = (kind === "gemini" ? gemini : openrouter)(rest.join(":"), system, messages, maxTokens, image, ac.signal)[Symbol.asyncIterator]();
+    const run = { entry, ac, it, at: Date.now() };
+    run.first = it.next().then((r) => ({ run, r }), (e) => ({ run, e }));
+    runs.push(run);
+    return true;
+  };
+  const stopAll = (except) => {
+    for (const x of runs) if (x !== except) { x.ac.abort(); x.it.return().catch(() => {}); }
+  };
+  let winner = null, firstPiece = "";
+  launch();
+  while (!winner && runs.length) {
+    let hedgeTimer = null;
+    const hedge = next < order.length ? new Promise((ok) => { hedgeTimer = setTimeout(() => ok({ hedge: true }), HEDGE[task] || 8000); }) : null;
+    const got = await Promise.race(runs.map((x) => x.first).concat(hedge ? [hedge] : []));
+    clearTimeout(hedgeTimer);
+    if (got.hedge) {                                   // (das Modell lässt sich Zeit – das nächste fängt parallel an)
+      log(`${task}: ${runs.map((x) => x.entry).join(" + ")} noch still nach ${Date.now() - t0} ms – frage zusätzlich ${order[next]}`);
+      launch();
+      continue;
+    }
+    const { run, r, e } = got;
+    runs.splice(runs.indexOf(run), 1);
+    if (e) {
       if (e instanceof Stop) {
         if (e.note) log(`WICHTIG: ${e.note}`);
-        if (started) return;
+        stopAll(null);
         throw e;
       }
-      if (started) { log(`Modell ${entry} brach mitten in der Antwort ab (${e.message})`); return; }
-      busy.set(entry, Date.now() + CFG.busyMs);
-      log(`Modell ${entry} geht nicht (${e.message})`);
+      busy.set(run.entry, Date.now() + CFG.busyMs);
+      log(`Modell ${run.entry} geht nicht (${e.message})`);
+    } else if (r.done) {
+      busy.set(run.entry, Date.now() + CFG.busyMs);
+      log(`Modell ${run.entry}: leere Antwort`);
+    } else {
+      winner = run;
+      firstPiece = r.value;
+      break;
     }
+    if (!runs.length) launch();                        // (keins läuft mehr – gleich das nächste)
   }
-  throw new Error(task === "vision" ? "Gerade kann sich keins der kostenlosen Modelle Bilder ansehen. Versuch es in einer Minute nochmal."
-    : "Alle kostenlosen Modelle sind gerade überlastet. Versuch es in einer Minute nochmal.");
+  if (!winner) {
+    throw new Error(task === "vision" ? "Gerade kann sich keins der kostenlosen Modelle Bilder ansehen. Versuch es in einer Minute nochmal."
+      : "Alle kostenlosen Modelle sind gerade überlastet. Versuch es in einer Minute nochmal.");
+  }
+  stopAll(winner);                                     // (die anderen werden nicht mehr gebraucht)
+  const firstMs = Date.now() - winner.at;
+  const firstAt = Date.now() - t0;
+  noteSpeed(winner.entry, firstMs);
+  busy.delete(winner.entry);
+  let chars = firstPiece.length;
+  yield { text: firstPiece, model: winner.entry };
+  try {
+    for (;;) {
+      const r = await winner.it.next();
+      if (r.done) break;
+      chars += r.value.length;
+      yield { text: r.value, model: winner.entry };
+    }
+  } catch (e) {
+    log(`Modell ${winner.entry} brach mitten in der Antwort ab (${e.message})`);
+  } finally {
+    // (nur Zeiten und Längen ins Protokoll – nie Inhalte)
+    log(`${task}: ${winner.entry} – erstes Wort nach ${firstAt} ms (Modell selbst ${firstMs} ms), fertig nach ${Date.now() - t0} ms, ${chars} Zeichen`);
+  }
 }
 
 // ---------------------------------------------------------------- HTTP
