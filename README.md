@@ -25,4 +25,7 @@ Programmieren Cohere North Mini Code, bei „Was ist das?“ ein Modell, das Bil
   selbst auf. Abschalten geht mit `KEEP_AWAKE=0`.
 - **Schutz:** Limits pro Gerät, pro IP-Adresse und für alle zusammen, Eingabeprüfung, der Schlüssel steht nur in Render.
   Details: [ANLEITUNG.md](ANLEITUNG.md).
-- **Test auf dem eigenen Rechner:** `node test.js`.
+- **Schnell antworten:** Hängt ein Modell, fragt der Server nach ein paar Sekunden zusätzlich das nächste – wer zuerst
+  schreibt, gewinnt. Wartezeiten: `HEDGE_VISION_MS` (Bilder, 6000), `HEDGE_CHAT_MS` (8000), `HEDGE_CODE_MS` (12000).
+- **Neu bauen:** Render baut bei jedem Push auf den Zweig `proxy` selbst neu (GitHub-Verbindung für das Repo ist eingerichtet).
+- **Test auf dem eigenen Rechner:** `npm test`.
