@@ -1,17 +1,22 @@
-Android-Version: 1.0.41
-PC-Version: 1.2.12
+Android-Version: 1.0.44
+PC-Version: 1.2.14
 
-Handy (1.0.41)
-- Bilder wie bei Claude: Tipp auf das Bild-Symbol, mach ein Foto oder lade Bilder hoch (bis zu 4, z. B. Vorder- und Rückseite). Die Bilder erscheinen im Eingabefeld. Schreib oder sag deine Frage dazu und tipp auf Senden.
-- Arbeitsblätter und Aufgaben: Jarvis löst sie, statt sie nur vorzulesen. Die Lösung erscheint übersichtlich mit Überschriften, Listen und Tabellen zum Kopieren oder Teilen. Vorgelesen wird nur die Kurzfassung.
-- Jarvis merkt sich, was auf den Bildern war: „Und was ist mit Aufgabe 2?“ oder „Mach mir eine Tabelle daraus“ funktionieren danach.
-- „Programmier mir ein Spiel wie Snake“: Jarvis schreibt das Spiel und öffnet es sofort zum Spielen. Es liegt auch in Downloads/Jarvis. Eine echte APK lässt sich auf dem Handy nicht bauen – das sagt Jarvis jetzt ehrlich, statt ein PDF mit einem Link zu machen, den es nicht gibt.
-- Du siehst, woran Jarvis gerade arbeitet: Schritt für Schritt (Bilder verkleinern, welches Modell gefragt wird, Datei speichern …). Danach zusammengeklappt, ein Tipp zeigt sie wieder.
-- „Schreib Sebi hallo auf WhatsApp“: Name und Nachricht werden jetzt richtig getrennt.
-- Dokumente enthalten keine privaten Angaben mehr, wenn sie nicht hineingehören (nur z. B. bei Bewerbung oder Lebenslauf).
-- „Mach mir eine Tabelle daraus“ zeigt nicht mehr die Bundesliga-Tabelle.
+Neu: Hilfe holen und helfen (Handy und PC)
+- Auf der Startseite „Hilfe holen“: Grund auswählen (z. B. Handy & Apps, PC & Laptop, Ist das Betrug?), kurz beschreiben – fertig.
+- Unter „Aufträge“ sehen alle mit Jarvis, wer gerade Hilfe braucht, und können das Ticket annehmen – wie bei Discord.
+- Dann schreibt ihr zu zweit im Chat. Der Chat bleibt, auch wenn du die App schließt. Neue Nachrichten und „Hilfe kommt!“ kommen sofort als Benachrichtigung.
+- Anrufen: Oben im Chat aufs Telefon tippen – beim anderen klingelt es, er kann annehmen oder ablehnen. Das geht auch zwischen Handy und PC.
+- Bildschirm teilen: Im Gespräch auf „Bildschirm“ – den Bildschirm des anderen ansehen, ansehen und steuern oder den eigenen zeigen. Der andere muss jedes Mal zustimmen.
+- Banking-Apps und Passwort-Fenster werden nicht übertragen. Spätestens mit dem Auflegen endet jede Freigabe.
+- Beide können das Ticket jederzeit schließen.
 
-PC (1.2.12)
-- Bilder wie bei Claude: ins Fenster ziehen, mit Strg+V einfügen oder über das Bild-Symbol wählen (bis zu 4). Sie warten im Eingabefeld, du schreibst deine Frage dazu und drückst Enter.
-- Aufgaben auf den Bildern werden gelöst. Die Lösung mit Tabellen öffnet sich in einem eigenen Fenster. Jarvis merkt sich den Bildinhalt für Nachfragen.
-- Du siehst, woran Jarvis gerade arbeitet: Schritt für Schritt.
+Handy: Spiele programmieren
+- Jarvis testet jedes neue Spiel wie mit dem Finger (Start antippen, wischen) und repariert es selbst, bis es läuft.
+- „Das funktioniert nicht“ oder „Man kann das Spiel nicht mal starten“ – auch mit Screenshot: Jarvis sucht den Fehler selbst und behebt ihn, statt Tipps zu geben.
+- Nachbessern per Sprache: „Mach die Schlange schneller“.
+- Statt APK: im Spiel oben auf „Startbildschirm“ tippen – dann liegt es wie eine App auf deinem Handy.
+
+PC (1.2.14)
+- Ruft dich jemand an, kommt das Jarvis-Fenster nach vorn und klingelt. Im Gespräch: Stumm, Kopfhörer, Bildschirm, Auflegen – verkleinert läuft es als Leiste oben weiter.
+- Teilst du deinen Bildschirm, zeigt ein roter Rahmen, welcher Monitor zu sehen ist. In Spielen kann niemand steuern.
+- Ohne Kopfhörer dämpft Jarvis dein Mikrofon, solange der andere spricht – mit Kopfhörer klingt es am besten.
