@@ -1,22 +1,15 @@
-Android-Version: 1.0.44
+Android-Version: 1.0.45
 PC-Version: 1.2.14
 
-Neu: Hilfe holen und helfen (Handy und PC)
-- Auf der Startseite „Hilfe holen“: Grund auswählen (z. B. Handy & Apps, PC & Laptop, Ist das Betrug?), kurz beschreiben – fertig.
-- Unter „Aufträge“ sehen alle mit Jarvis, wer gerade Hilfe braucht, und können das Ticket annehmen – wie bei Discord.
-- Dann schreibt ihr zu zweit im Chat. Der Chat bleibt, auch wenn du die App schließt. Neue Nachrichten und „Hilfe kommt!“ kommen sofort als Benachrichtigung.
-- Anrufen: Oben im Chat aufs Telefon tippen – beim anderen klingelt es, er kann annehmen oder ablehnen. Das geht auch zwischen Handy und PC.
-- Bildschirm teilen: Im Gespräch auf „Bildschirm“ – den Bildschirm des anderen ansehen, ansehen und steuern oder den eigenen zeigen. Der andere muss jedes Mal zustimmen.
-- Banking-Apps und Passwort-Fenster werden nicht übertragen. Spätestens mit dem Auflegen endet jede Freigabe.
-- Beide können das Ticket jederzeit schließen.
+Neu: Updates direkt in der App
+- Gibt es eine neue Version, zeigt Jarvis beim Start „Update verfügbar“. Ein Tipp auf „Jetzt aktualisieren“ lädt sie direkt in der App und installiert sie – ohne Webseite.
+- Beim ersten Mal fragt Android einmal, ob Jarvis Apps installieren darf.
+- Jarvis installiert nur Updates, die wirklich von Warpline Games signiert sind.
 
-Handy: Spiele programmieren
-- Jarvis testet jedes neue Spiel wie mit dem Finger (Start antippen, wischen) und repariert es selbst, bis es läuft.
-- „Das funktioniert nicht“ oder „Man kann das Spiel nicht mal starten“ – auch mit Screenshot: Jarvis sucht den Fehler selbst und behebt ihn, statt Tipps zu geben.
-- Nachbessern per Sprache: „Mach die Schlange schneller“.
-- Statt APK: im Spiel oben auf „Startbildschirm“ tippen – dann liegt es wie eine App auf deinem Handy.
+Neu: Jarvis sieht deinen Bildschirm
+- Sag zum Beispiel „Hilf mir mit meinem Handy, mein Akku ist so schnell leer“ oder „Schau dir meinen Bildschirm an“. Android fragt einmal, dann schaut Jarvis bei jeder Frage mit hin und sagt dir den nächsten Schritt.
+- Oben zeigt eine kleine Leiste die Antwort, „Frag mich“ und „Beenden“. Banking-Apps schaut Jarvis nie an.
 
-PC (1.2.14)
-- Ruft dich jemand an, kommt das Jarvis-Fenster nach vorn und klingelt. Im Gespräch: Stumm, Kopfhörer, Bildschirm, Auflegen – verkleinert läuft es als Leiste oben weiter.
-- Teilst du deinen Bildschirm, zeigt ein roter Rahmen, welcher Monitor zu sehen ist. In Spielen kann niemand steuern.
-- Ohne Kopfhörer dämpft Jarvis dein Mikrofon, solange der andere spricht – mit Kopfhörer klingt es am besten.
+Bilder viel schneller
+- Die Antwort auf ein Bild erscheint Wort für Wort, sobald die KI schreibt – vorher zählen die Sekunden mit.
+- Hängt ein KI-Modell, springt nach wenigen Sekunden ein anderes ein.
