@@ -396,12 +396,34 @@ async function handleHelp(req, res) {
   } else if (req.method !== "GET" || path !== "/v1/help/open") {
     return send(res, 405, { error: "nicht erlaubt" });
   }
+  if (path === "/v1/help/wait") {
+    // (1.0.44) der Server hält die Anfrage, bis sich an einem der Tickets etwas tut – Nachrichten und Anrufe kommen sofort an
+    return new Promise((resolve) => {
+      const w = help.wait(device, body, (out) => { send(res, 200, out); resolve(); });
+      res.on("close", () => { if (w && w.cancel) w.cancel(); resolve(); });
+    });
+  }
   try {
     return send(res, 200, help.handle(path, device, body, clientIp(req)));
   } catch (e) {
     if (e instanceof help.HelpError) return send(res, e.status, { error: e.message });
     throw e;
   }
+}
+
+// ---------------------------------------------------------------- das Gespräch zu zweit (1.0.44, siehe live.js)
+const live = require("./live.js");
+help.listeners.push((x, what) => { if (what === "call-end" || what === "closed") live.hangUp(x.id); });
+function handleUpgrade(req, socket, head) {
+  socket.on("error", () => {});
+  const deny = (code, text) => { try { socket.end(`HTTP/1.1 ${code} ${text}\r\nConnection: close\r\n\r\n`); } catch (e) { /* */ } };
+  if (String(req.url || "").split("?")[0] !== "/v1/help/live") return deny(404, "Not Found");
+  if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return deny(401, "Unauthorized");
+  const device = String(req.headers["x-device"] || "").slice(0, 80);
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return deny(400, "Bad Request");
+  const limit = helpByIp(clientIp(req)) || helpByDevice(device);
+  if (limit) return deny(429, "Too Many Requests");
+  live.join(help, req, socket, head);
 }
 
 const server = http.createServer(async (req, res) => {
@@ -484,4 +506,5 @@ if (require.main === module) {
     if (keepAwake()) console.log("Hält sich wach (ruft sich alle 10 Minuten selbst auf).");
   });
 }
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help };
+server.on("upgrade", handleUpgrade);
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live };
