@@ -93,6 +93,11 @@ const upstream = http.createServer((req, res) => {
       ok("kaputte oder gefährliche Eingaben → 400, kein Modell wird gefragt");
       const big = checkBody({ messages: [{ role: "user", content: "a" }], max_tokens: 999999 });
       assert.equal(big.maxTokens, 4000); ok("max_tokens wird begrenzt");
+      // 1.0.42: beim Programmieren geht das ganze Spiel zum Nachbessern mit – bis 40 000 Zeichen, sonst bleibt es bei 8 000
+      assert.equal(checkBody({ messages: [{ role: "user", content: "x".repeat(30000) }], task: "code" }).task, "code");
+      assert.throws(() => checkBody({ messages: [{ role: "user", content: "x".repeat(30000) }] }), /zu lang/);
+      assert.throws(() => checkBody({ messages: [{ role: "user", content: "x".repeat(41000) }], task: "code" }), /zu lang/);
+      ok("Programmieren: längere Nachricht erlaubt (das Spiel zum Nachbessern), sonst nicht");
       // --- 503 beim ersten Modell → das zweite antwortet, live in Stücken (mit \r\n getrennt wie bei Google)
       ipNo = 3; calls = [];
       const r = await post({ ...hi, stream: true });

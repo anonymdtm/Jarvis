@@ -48,6 +48,7 @@ const CFG = {
   maxBody: 1_700_000,                                    // Bytes pro Anfrage (ein Bild passt – Text ist unten enger begrenzt)
   maxImage: 1_600_000,                                   // Base64-Zeichen eines Bildes (gut 1 MB JPEG; die App verkleinert vorher)
   maxMessage: 8_000,                                     // Zeichen pro Nachricht
+  maxCodeMessage: 40_000,                                // … beim Programmieren (1.0.42: das Spiel geht zum Nachbessern mit)
   maxTotal: 60_000,                                      // Zeichen aller Nachrichten zusammen
   maxSystem: 20_000,
   trustProxy: env.TRUST_PROXY !== "0",                   // Render/Railway stehen vor dem Server: die echte IP steht in x-forwarded-for
@@ -106,11 +107,12 @@ function checkBody(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Bad("kaputte Anfrage");
   if (!Array.isArray(body.messages) || body.messages.length === 0 || body.messages.length > 40) throw new Bad("keine oder zu viele Nachrichten");
   let total = 0;
+  const longest = body.task === "code" ? CFG.maxCodeMessage : CFG.maxMessage;
   const messages = body.messages.map((m) => {
     if (!m || typeof m !== "object" || typeof m.content !== "string") throw new Bad("kaputte Nachricht");
     if (m.role !== "user" && m.role !== "assistant") throw new Bad("unbekannte Rolle");
     const content = m.content.replace(/\u0000/g, "").trim();
-    if (content.length > CFG.maxMessage) throw new Bad("Nachricht zu lang");
+    if (content.length > longest) throw new Bad("Nachricht zu lang");
     total += content.length;
     return { role: m.role, content };
   }).filter((m) => m.content);
