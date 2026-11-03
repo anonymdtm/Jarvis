@@ -11,7 +11,9 @@ const GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 const LIMITS = {
   frame: 1_500_000,       // ein Bild darf so groß sein (Bytes)
   rooms: 200,             // so viele Gespräche gleichzeitig
-  backlog: 1_500_000,     // staut sich bei der anderen Seite mehr, fallen Bilder weg (Sprache nicht)
+  // staut sich bei der anderen Seite mehr, fallen Bilder weg (Sprache nicht) – klein, damit die Stimme bei langsamem Netz
+  // nicht hinter Bildern wartet (200 KB sind bei 1 Mbit/s schon 1,6 Sekunden)
+  backlog: 200_000,
   pingMs: 15_000,
 };
 
