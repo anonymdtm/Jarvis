@@ -7,11 +7,11 @@ window.JARVIS_SITE = {
   setupName: "Jarvis-Setup.exe",
   // die neueste Version – steht direkt an den Download-Knöpfen (ohne Anfrage bei GitHub, also ohne Einwilligung).
   // Wird beim Veröffentlichen automatisch eingetragen (Workflow „Veröffentlichen“), hier also nichts von Hand ändern.
-  androidVersion: "1.0.41",
-  pcVersion: "1.2.12",
+  androidVersion: "1.0.44",
+  pcVersion: "1.2.14",
   versionDate: "2026-11-03",
   // Dateigrößen in MB (stehen in den Download-Kacheln) – trägt der Workflow ebenfalls selbst ein
-  androidSize: "71",
+  androidSize: "72",
   pcSize: "67",
   // Brevo-Formular: die "action"-Adresse des Formulars aus Brevo (Formulare → dein Formular → "HTML-Code" → form action).
   // Leer lassen, solange es noch kein Brevo-Konto gibt – dann geht der Download ohne E-Mail-Liste.
