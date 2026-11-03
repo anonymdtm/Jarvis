@@ -366,19 +366,49 @@ function send(res, code, obj) {
   res.end(JSON.stringify(obj));
 }
 
-function readBody(req) {
+function readBody(req, max = CFG.maxBody) {
   return new Promise((ok, bad) => {
     let n = 0; const parts = [];
-    req.on("data", (c) => { n += c.length; if (n > CFG.maxBody) { bad(new Bad("zu groß")); req.destroy(); } else parts.push(c); });
+    req.on("data", (c) => { n += c.length; if (n > max) { bad(new Bad("zu groß")); req.destroy(); } else parts.push(c); });
     req.on("end", () => ok(Buffer.concat(parts).toString("utf8")));
     req.on("error", bad);
   });
+}
+
+// ---------------------------------------------------------------- Hilfe-Tickets (1.0.43, siehe help.js)
+const help = require("./help.js");
+const helpByDevice = limiter(Number(env.HELP_PER_MINUTE || 120), Number(env.HELP_PER_DAY || 20_000));
+const helpByIp = limiter(Number(env.HELP_IP_PER_MINUTE || 400), Number(env.HELP_IP_PER_DAY || 100_000));
+async function handleHelp(req, res) {
+  if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+  const device = String(req.headers["x-device"] || "").slice(0, 80);
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
+  const limit = helpByIp(clientIp(req)) || helpByDevice(device);
+  if (limit) return send(res, 429, { error: limit });
+  const path = req.url.split("?")[0];
+  let body = {};
+  if (req.method === "POST") {
+    if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
+    let raw;
+    try { raw = await readBody(req, 200_000); } catch (e) { return send(res, 413, { error: "zu groß" }); }
+    try { body = JSON.parse(raw || "{}"); } catch (e) { return send(res, 400, { error: "kaputte Anfrage" }); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return send(res, 400, { error: "kaputte Anfrage" });
+  } else if (req.method !== "GET" || path !== "/v1/help/open") {
+    return send(res, 405, { error: "nicht erlaubt" });
+  }
+  try {
+    return send(res, 200, help.handle(path, device, body, clientIp(req)));
+  } catch (e) {
+    if (e instanceof help.HelpError) return send(res, e.status, { error: e.message });
+    throw e;
+  }
 }
 
 const server = http.createServer(async (req, res) => {
   const log = (m) => console.log(new Date().toISOString(), m);   // (nie Inhalte oder Schlüssel)
   try {
     if (req.method === "GET" && req.url === "/healthz") return send(res, 200, { ok: true });   // (auch zum Aufwecken)
+    if (req.url.startsWith("/v1/help/")) return await handleHelp(req, res);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
     if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
@@ -454,4 +484,4 @@ if (require.main === module) {
     if (keepAwake()) console.log("Hält sich wach (ruft sich alle 10 Minuten selbst auf).");
   });
 }
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help };
