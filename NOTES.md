@@ -1,5 +1,8 @@
-Android-Version: 1.0.45
+Android-Version: 1.0.46
 PC-Version: 1.2.14
+
+1.0.46: das erste Update direkt in der App
+- Kleines Update zum Ausprobieren: Wer 1.0.45 hat, bekommt es beim Öffnen von Jarvis angezeigt und installiert es mit einem Tipp.
 
 Neu: Updates direkt in der App
 - Gibt es eine neue Version, zeigt Jarvis beim Start „Update verfügbar“. Ein Tipp auf „Jetzt aktualisieren“ lädt sie direkt in der App und installiert sie – ohne Webseite.
