@@ -78,3 +78,9 @@ Bei `vision` („Was ist das?“ mit Foto, Screenshot oder Bild) zusätzlich `"i
 Freiwillig `"prefer":["nemotron-3.5-super","nemotron"]`: das Modell, das in der App unter „Modellauswahl“ gewählt ist (Teile der
 OpenRouter-Namen, das beste zuerst). Es wird zuerst gefragt, die anderen bleiben als Ersatz dahinter.
 Antwort als Strom: `data: {"delta":"Text"}` … `data: {"done":true,"model":"…"}`.
+
+## Neu bauen
+
+Render baut bei jedem Push auf den Zweig `proxy` selbst neu – die Render-App ist dafür bei GitHub für das Repo
+`anonymdtm/Jarvis` installiert (3.11.2026). Einen Neubau von Hand braucht es nur noch, wenn das einmal nicht klappt:
+Render → jarvis-warpline → Manual Deploy → Deploy latest commit.
