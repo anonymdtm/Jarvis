@@ -143,7 +143,7 @@ function checkBody(body) {
   }
   const mt = Number(body.max_tokens);
   const maxTokens = Number.isFinite(mt) ? Math.min(Math.max(Math.round(mt), 16), 4000) : 800;
-  return { messages: messages.slice(-30), system, task, image, prefer, maxTokens, stream: body.stream !== false };
+  return { messages: messages.slice(-30), system, task, image, prefer, maxTokens, stream: body.stream !== false, fast: body.fast === true };
 }
 
 // ---------------------------------------------------------------- die kostenlosen OpenRouter-Modelle (Liste alle 12 Stunden)
@@ -337,7 +337,9 @@ function noteSpeed(entry, ms) {
 /** Nach so vielen ms ohne erstes Wort fragt der Server zusätzlich das nächste Modell – wer zuerst antwortet, gewinnt. */
 const HEDGE = { vision: Number(env.HEDGE_VISION_MS || 6000), chat: Number(env.HEDGE_CHAT_MS || 8000), code: Number(env.HEDGE_CODE_MS || 12000) };
 
-async function* answer(task, system, messages, maxTokens, log, image = null, prefer = []) {
+const FAST_HEDGE = Number(env.HEDGE_FAST_MS || 2500);
+
+async function* answer(task, system, messages, maxTokens, log, image = null, prefer = [], fast = false) {
   const entries = task === "code" ? CFG.code : task === "vision" ? CFG.vision : CFG.chat;
   const resolved = [];
   for (const raw of entries) {
@@ -347,7 +349,8 @@ async function* answer(task, system, messages, maxTokens, log, image = null, pre
   // (gerade überlastete Modelle zuletzt – aber trotzdem noch versuchen, vielleicht sind sie wieder da)
   let ready = resolved.filter((e) => !isBusy(e));
   // 1.0.45: bei Bildern das zuletzt schnellste zuerst (der Nutzer, 3.11.: „4, 5 Minuten, bis eine Antwort kommt“)
-  if (task === "vision") {
+  // 1.2.1: "fast" (Jarvis spricht in einem Anruf – der Anrufer wartet) → auch hier das schnellste zuerst, früher parallel
+  if (task === "vision" || fast) {
     const rank = (e) => (speed.has(e) ? speed.get(e) : 8000);
     ready = ready.map((e, i) => [e, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((x) => x[0]);
   }
@@ -376,7 +379,7 @@ async function* answer(task, system, messages, maxTokens, log, image = null, pre
   launch();
   while (!winner && runs.length) {
     let hedgeTimer = null;
-    const hedge = next < order.length ? new Promise((ok) => { hedgeTimer = setTimeout(() => ok({ hedge: true }), HEDGE[task] || 8000); }) : null;
+    const hedge = next < order.length ? new Promise((ok) => { hedgeTimer = setTimeout(() => ok({ hedge: true }), fast ? FAST_HEDGE : HEDGE[task] || 8000); }) : null;
     const got = await Promise.race(runs.map((x) => x.first).concat(hedge ? [hedge] : []));
     clearTimeout(hedgeTimer);
     if (got.hedge) {                                   // (das Modell lässt sich Zeit – das nächste fängt parallel an)
@@ -519,7 +522,7 @@ const server = http.createServer(async (req, res) => {
     const cap = allowedAll();
     if (cap) return send(res, 429, { error: cap });
 
-    const gen = answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer);
+    const gen = answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer, input.fast);
     if (!input.stream) {
       let text = "", model = "";
       try {
