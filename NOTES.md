@@ -1,5 +1,10 @@
-Android-Version: 1.0.46
+Android-Version: 1.0.47
 PC-Version: 1.2.15
+
+
+1.0.47: Wecker und Updates
+- „Wecker auf 7:15 Uhr“ stellt den Wecker jetzt wirklich auf 7:15 – vorher wurde daraus 15 Uhr. Auch die Antwort „7:15“ auf „Um wie viel Uhr?“ wird richtig verstanden (vorher rechnete Jarvis 7 geteilt durch 15).
+- Neue Versionen erscheinen jetzt gleich beim nächsten Öffnen von Jarvis (vorher erst nach bis zu 20 Minuten).
 
 1.0.46: das erste Update direkt in der App
 - Kleines Update zum Ausprobieren: Wer 1.0.45 hat, bekommt es beim Öffnen von Jarvis angezeigt und installiert es mit einem Tipp.
