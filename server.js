@@ -21,6 +21,7 @@
 "use strict";
 const http = require("http");
 const crypto = require("crypto");
+const premium = require("./premium.js");
 
 const env = process.env;
 const list = (v, d) => (v || d).split(",").map((s) => s.trim()).filter(Boolean);
@@ -141,9 +142,15 @@ function checkBody(body) {
     }
     prefer = body.prefer;
   }
+  // (Premium, 1.3.0) das Modell aus der Auswahl „Alle Modelle“ – ein Schlüssel aus /v1/premium/status, z. B. "claude-sonnet"
+  let model = "";
+  if (body.model !== undefined) {
+    if (typeof body.model !== "string" || !/^[a-z0-9.:\/_-]{0,80}$/.test(body.model)) throw new Bad("kaputter Modell-Wunsch");
+    model = body.model === "auto" ? "" : body.model;
+  }
   const mt = Number(body.max_tokens);
   const maxTokens = Number.isFinite(mt) ? Math.min(Math.max(Math.round(mt), 16), 4000) : 800;
-  return { messages: messages.slice(-30), system, task, image, prefer, maxTokens, stream: body.stream !== false, fast: body.fast === true };
+  return { messages: messages.slice(-30), system, task, image, prefer, maxTokens, stream: body.stream !== false, fast: body.fast === true, model };
 }
 
 // ---------------------------------------------------------------- die kostenlosen OpenRouter-Modelle (Liste alle 12 Stunden)
@@ -156,6 +163,7 @@ async function freeModels() {
   try {
     const r = await fetch(`${CFG.openrouterBase}/models`, { signal: AbortSignal.timeout(15000) });
     const j = await r.json();
+    premium.setModels(j.data);                            // (die bezahlten Modelle für Premium aus derselben Liste)
     const ok = (j.data || []).filter((m) => {
       const p = m.pricing || {};
       const outs = (m.architecture || {}).output_modalities;
@@ -290,7 +298,7 @@ async function* gemini(model, system, messages, maxTokens, image, signal = null)
   } finally { clearTimeout(timer); }
 }
 
-async function* openrouter(model, system, messages, maxTokens, image, signal = null) {
+async function* openrouter(model, system, messages, maxTokens, image, signal = null, meter = null) {
   if (!CFG.openrouterKey) throw new Retry("kein OpenRouter-Schlüssel");
   // (ein Bild hängt an der letzten Nachricht – so wie OpenAI es erwartet)
   const withImage = messages.map((m, i) => (image && i === messages.length - 1
@@ -301,13 +309,16 @@ async function* openrouter(model, system, messages, maxTokens, image, signal = n
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${CFG.openrouterKey}`, "x-title": "Jarvis" },
     // (Denk-Modelle zählen ihr Nachdenken in max_tokens mit – Platz dafür lassen, die Antwort bleibt durch den Prompt kurz)
-    body: JSON.stringify({ model, messages: msgs, max_tokens: Math.min(8000, Math.max(1500, maxTokens * 4)), stream: true }),
+    // (meter: Premium – OpenRouter schickt am Ende mit, was die Antwort gekostet hat)
+    body: JSON.stringify({ model, messages: msgs, max_tokens: Math.min(8000, Math.max(1500, maxTokens * 4)), stream: true,
+      ...(meter ? { usage: { include: true } } : {}) }),
   }, "or", signal);
   try {
     for await (const data of sse(res)) {
       if (data === "[DONE]") break;
       let j; try { j = JSON.parse(data); } catch { continue; }
       if (j.error) throw new Retry("Fehler mitten in der Antwort");
+      if (meter && j.usage) meter.usage = j.usage;
       const text = j.choices?.[0]?.delta?.content;
       if (typeof text === "string" && text) { clearTimeout(timer); yield text; }
     }
@@ -433,6 +444,35 @@ async function* answer(task, system, messages, maxTokens, log, image = null, pre
   }
 }
 
+/** Premium (1.3.0): das bezahlte Modell antwortet, die Kosten gehen vom Budget des Codes ab. Geht es nicht (Guthaben bei
+ *  OpenRouter leer, Modell weg, Störung), antworten wie immer die kostenlosen – der Nutzer bekommt in jedem Fall eine Antwort. */
+async function* paidAnswer(prem, input, log) {
+  const meter = {};
+  const t0 = Date.now();
+  let chars = 0;
+  const charsIn = input.system.length + input.messages.reduce((n, m) => n + m.content.length, 0) + (input.image ? 3000 : 0);
+  try {
+    for await (const text of openrouter(prem.model.id, input.system, input.messages, input.maxTokens, input.image, null, meter)) {
+      chars += text.length;
+      yield { text, model: "premium:" + prem.model.name };
+    }
+  } catch (e) {
+    if (!chars) {
+      log(`WICHTIG: Premium-Modell ${prem.model.id} geht nicht (${e.message}) – Guthaben bei OpenRouter prüfen. Antwort kommt kostenlos.`);
+      prem.fellBack = true;
+      yield* answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer, input.fast);
+      return;
+    }
+    log(`Premium-Modell ${prem.model.id} brach mitten in der Antwort ab (${e.message})`);
+  } finally {
+    if (chars) {
+      const c = premium.cost(prem.model, meter.usage, charsIn, chars);
+      premium.charge(prem.id, c);
+      log(`premium ${input.task}: ${prem.model.id} – ${Date.now() - t0} ms, ${chars} Zeichen, ${(c * 100).toFixed(3)} Cent, Code …${prem.id.slice(-4)}`);
+    }
+  }
+}
+
 // ---------------------------------------------------------------- HTTP
 function send(res, code, obj) {
   res.writeHead(code, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
@@ -499,18 +539,66 @@ function handleUpgrade(req, socket, head) {
   live.join(help, req, socket, head);
 }
 
+// ---------------------------------------------------------------- Premium (1.3.0, siehe premium.js)
+const premiumByIp = limiter(30, 2000);
+const adminByIp = limiter(6, 60);                      // (wer das Verwaltungs-Passwort rät, kommt nicht weit)
+const premiumByDevice = limiter(Number(env.PREMIUM_PER_MINUTE || 20), Number(env.PREMIUM_PER_DAY || 1500));
+async function handlePremium(req, res) {
+  const ip = clientIp(req);
+  if (req.method === "GET" && req.url === "/admin") {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-frame-options": "DENY",
+      "x-content-type-options": "nosniff", "referrer-policy": "no-referrer" });
+    return res.end(premium.ADMIN_PAGE);
+  }
+  if (req.method === "POST" && req.url === "/v1/premium/admin/code") {
+    const limit = adminByIp(ip);
+    if (limit) return send(res, 429, { error: limit });
+    if (!premium.CFG.admin || premium.CFG.admin.length < 12 || !premium.on()) return send(res, 503, { error: "Premium ist auf dem Server noch nicht eingerichtet (ADMIN_TOKEN und PREMIUM_SECRET)." });
+    if (!sameSecret(req.headers["x-admin-token"] || "", premium.CFG.admin)) return send(res, 401, { error: "Falsches Passwort." });
+    let body;
+    try { body = JSON.parse(await readBody(req, 2000) || "{}"); } catch (e) { return send(res, 400, { error: "kaputte Anfrage" }); }
+    try {
+      const code = premium.make(String(body.plan || ""), body.days === undefined ? 30 : body.days, body.budget);
+      const c = premium.parse(code);
+      console.log(new Date().toISOString(), `Premium-Code erstellt: ${c.plan}, ${c.budget} $, bis ${c.until}, …${c.id.slice(-4)}`);
+      return send(res, 200, { code, plan: c.plan, budget: c.budget, until: c.until });
+    } catch (e) { return send(res, 400, { error: e.message }); }
+  }
+  if (req.method === "GET" && req.url === "/v1/premium/status") {
+    if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+    const limit = premiumByIp(ip);
+    if (limit) return send(res, 429, { error: limit });
+    if (!premium.on()) return send(res, 200, { ok: false, error: "Premium gibt es auf diesem Server noch nicht." });
+    const st = await premium.status(String(req.headers["x-jarvis-premium"] || "").slice(0, 60));
+    if (!st.ok) return send(res, 200, st);
+    await freeModels();
+    const { id, ...out } = st;
+    return send(res, 200, { ...out, models: premium.models() });
+  }
+  return send(res, 404, { error: "nicht gefunden" });
+}
+
 const server = http.createServer(async (req, res) => {
   const log = (m) => console.log(new Date().toISOString(), m);   // (nie Inhalte oder Schlüssel)
   try {
     if (req.method === "GET" && req.url === "/healthz") return send(res, 200, { ok: true });   // (auch zum Aufwecken)
     if (req.url.startsWith("/v1/help/")) return await handleHelp(req, res);
+    if (req.url.startsWith("/v1/premium/") || req.url === "/admin") return await handlePremium(req, res);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
     if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
     const ip = clientIp(req);
     const device = String(req.headers["x-device"] || "").slice(0, 80);
     if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
-    const limit = byIp(ip) || byDevice(device);
+    // Premium: ein gültiger Code mit Rest-Budget – eigene (großzügige) Grenzen, das Tageslimit der Gratis-Modelle gilt nicht
+    let prem = null, premNote = null;
+    const code = String(req.headers["x-jarvis-premium"] || "").slice(0, 60);
+    if (code && premium.on()) {
+      const st = await premium.status(code);
+      if (st.ok && st.active) prem = { id: st.id, plan: st.plan };
+      else if (st.ok) premNote = { active: false, reason: st.expired ? "abgelaufen" : "leer" };
+    }
+    const limit = prem ? premiumByDevice(device) : byIp(ip) || byDevice(device);
     if (limit) return send(res, 429, { error: limit });
 
     let input;
@@ -519,16 +607,29 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       return send(res, e instanceof Bad ? 400 : 400, { error: e instanceof Bad ? e.message : "kaputte Anfrage" });
     }
-    const cap = allowedAll();
-    if (cap) return send(res, 429, { error: cap });
-
-    const gen = answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer, input.fast);
+    if (prem) {
+      await freeModels();
+      prem.model = premium.pick(prem.plan, input.task, input.model);
+      if (!prem.model) prem = null;                       // (die Liste der bezahlten Modelle ist gerade nicht da)
+    }
+    if (!prem) {
+      const cap = allowedAll();
+      if (cap) return send(res, 429, { error: cap });
+    }
+    /** Was die App über das Abo wissen muss – hängt an der fertigen Antwort. */
+    const premInfo = async () => {
+      if (!prem) return premNote ? { premium: premNote } : {};
+      const st = await premium.status(code);
+      return { premium: { active: st.active, plan: st.plan, percent: st.percent, ...(prem.fellBack ? { fallback: true } : {}) } };
+    };
+    const gen = prem ? paidAnswer(prem, input, log)
+      : answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer, input.fast);
     if (!input.stream) {
       let text = "", model = "";
       try {
         for await (const p of gen) { text += p.text; model = p.model; }
       } catch (e) { return send(res, e.status || 503, { error: e.message }); }
-      return send(res, 200, { text: text.trim(), model });
+      return send(res, 200, { text: text.trim(), model, ...(await premInfo()) });
     }
     // Streaming: erst wenn das erste Stück da ist, gehen die Kopfzeilen raus (bis dahin darf noch gewechselt werden)
     let headed = false;
@@ -546,7 +647,7 @@ const server = http.createServer(async (req, res) => {
         res.write(`data: ${JSON.stringify({ delta: p.text })}\n\n`);
       }
       head();
-      res.write(`data: ${JSON.stringify({ done: true, model })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, model, ...(await premInfo()) })}\n\n`);
       res.end();
     } catch (e) {
       if (!headed) return send(res, e.status || 503, { error: e.message });
@@ -574,10 +675,11 @@ function keepAwake() {
 if (require.main === module) {
   if (!CFG.appToken) console.warn("WARNUNG: APP_TOKEN fehlt – der Server nimmt keine Anfragen an.");
   if (!CFG.openrouterKey && !CFG.geminiKey) console.warn("WARNUNG: OPENROUTER_API_KEY fehlt – der Server kann keine Frage beantworten.");
+  if (premium.on() && !premium.CFG.upstashUrl) console.warn("HINWEIS: Premium ohne UPSTASH_REDIS_REST_URL – der Verbrauch der Codes beginnt nach jedem Neustart wieder bei 0.");
   server.listen(CFG.port, () => {
     console.log(`Jarvis-Proxy läuft auf Port ${CFG.port} – Reden: ${CFG.chat.join(" → ")} | Code: ${CFG.code.join(" → ")} | Bilder: ${CFG.vision.join(" → ")}`);
     if (keepAwake()) console.log("Hält sich wach (ruft sich alle 10 Minuten selbst auf).");
   });
 }
 server.on("upgrade", handleUpgrade);
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium };

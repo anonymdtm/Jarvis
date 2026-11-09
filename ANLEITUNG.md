@@ -84,3 +84,25 @@ Antwort als Strom: `data: {"delta":"Text"}` … `data: {"done":true,"model":"…
 Render baut bei jedem Push auf den Zweig `proxy` selbst neu – die Render-App ist dafür bei GitHub für das Repo
 `anonymdtm/Jarvis` installiert (3.11.2026). Einen Neubau von Hand braucht es nur noch, wenn das einmal nicht klappt:
 Render → jarvis-warpline → Manual Deploy → Deploy latest commit.
+
+## Jarvis Premium (ab Server 1.3.0)
+
+Premium ist aus, bis du es einschaltest. So geht es:
+
+1. **Guthaben bei OpenRouter aufladen** (openrouter.ai → Credits, mindestens 5 $). Derselbe Schlüssel wie bisher.
+2. In **Render → jarvis-warpline → Environment** zwei Werte anlegen (beide denkst du dir selbst aus, lang und zufällig, und
+   gibst sie niemandem):
+   - `PREMIUM_SECRET` – damit unterschreibt der Server die Codes (mindestens 20 Zeichen). Nie mehr ändern, sonst gelten
+     alle alten Codes nicht mehr.
+   - `ADMIN_TOKEN` – dein Passwort für die Verwaltungsseite (mindestens 12 Zeichen).
+3. **Codes erstellen:** `https://jarvis-warpline.onrender.com/admin` öffnen, Passwort eingeben, Abo wählen → Code kopieren
+   und weitergeben. „Test“ = 1 $ Budget zum Verschenken, Basis 4 $, Plus 7 $, Max 15 $ (ändern: `PREMIUM_PLANS`).
+4. In Jarvis unter **Mehr → Premium** (Handy) bzw. **Einstellungen → Premium** (PC) den Code eintragen.
+
+Ist das Budget eines Codes leer oder der Code abgelaufen, antworten wieder die kostenlosen Modelle. Mehr als die Budgets
+aller Codes zusammen kann es nie kosten.
+
+**Wichtig – Verbrauch dauerhaft speichern:** Ohne Datenbank merkt sich der Server den Verbrauch nur, bis er neu startet
+(z. B. nach einem Update). Für echte Kunden deshalb kostenlos bei upstash.com eine Redis-Datenbank anlegen und in Render
+`UPSTASH_REDIS_REST_URL` und `UPSTASH_REDIS_REST_TOKEN` eintragen. Zusätzlich bei OpenRouter für den Schlüssel ein
+Ausgabenlimit setzen (Keys → Credit limit).
