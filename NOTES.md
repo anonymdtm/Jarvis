@@ -1,7 +1,13 @@
-Android-Version: 1.0.48
+Android-Version: 1.0.49
 PC-Version: 1.2.16
 
 
+
+
+1.0.49: Bilder erstellen (Premium)
+- „Erstell mir ein Bild von einer Katze im Weltall“ – Jarvis malt es, zeigt es und legt es in deine Galerie (Ordner Jarvis).
+- Eigene Fotos ändern: bis zu 3 Bilder anhängen und sagen, was passieren soll („Ändere den Hintergrund zu einem Strand“, „Mach daraus einen Comic“).
+- Dafür brauchst du einen Premium-Code (Mehr → Premium).
 
 1.0.48: Premium-Code und Ruhe beim Öffnen
 - Jarvis hört beim Öffnen der App nicht mehr sofort zu – nur noch, wenn du auf das Mikrofon tippst oder das Aktivierungswort sagst. (Wer es wie früher möchte: Einstellungen → „Beim Öffnen sofort zuhören“.)
