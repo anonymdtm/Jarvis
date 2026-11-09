@@ -12,7 +12,8 @@ const MODELS = [
   { id: "anthropic/claude-fable-5.2", created: 40, pricing: { prompt: "0.00001", completion: "0.00005" } },
   { id: "openai/gpt-6", created: 40, pricing: { prompt: "0.000003", completion: "0.000012" } },
   { id: "openai/gpt-6-mini", created: 40, pricing: { prompt: "0.0000003", completion: "0.0000012" } },
-  { id: "openai/gpt-image-2", created: 50, pricing: { prompt: "0.000003", completion: "0.000012" } },
+  { id: "openai/gpt-image-2", created: 50, pricing: { prompt: "0.000003", completion: "0.000012" }, architecture: { input_modalities: ["text", "image"], output_modalities: ["image"] } },
+  { id: "google/gemini-4-flash-image", name: "Nano Banana", created: 45, pricing: { prompt: "0.0000003", completion: "0.000002" }, architecture: { input_modalities: ["text", "image"], output_modalities: ["image", "text"] } },
 ];
 const upstream = http.createServer((req, res) => {
   let b = "";
@@ -20,7 +21,12 @@ const upstream = http.createServer((req, res) => {
   req.on("end", () => {
     if (req.url.startsWith("/or/models")) { res.writeHead(200, { "content-type": "application/json" }); return res.end(JSON.stringify({ data: MODELS })); }
     const j = JSON.parse(b);
-    calls.push({ model: j.model, usage: j.usage });
+    calls.push({ model: j.model, usage: j.usage, parts: Array.isArray(j.messages[0].content) ? j.messages[0].content.length : 0 });
+    if (j.modalities) {
+      res.writeHead(200, { "content-type": "application/json" });
+      if (JSON.stringify(j.messages).includes("verboten")) return res.end(JSON.stringify({ choices: [{ message: { content: "Das kann ich nicht malen." } }] }));
+      return res.end(JSON.stringify({ choices: [{ message: { content: "Bitte sehr.", images: [{ image_url: { url: "data:image/png;base64,QUJDREVGR0g=" } }] } }], usage: { cost: 0.05 } }));
+    }
     if (broke && !j.model.endsWith(":free")) { res.writeHead(402); return res.end('{"error":{"message":"Insufficient credits"}}'); }
     res.writeHead(200, { "content-type": "text/event-stream" });
     res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: j.model + " sagt Hallo" } }] })}\n\n`);
@@ -123,7 +129,25 @@ const upstream = http.createServer((req, res) => {
       assert.strictEqual(premium.parse(fresh).expired, true);
       Date.now = realNow;
       ok("Ein Code läuft nach seiner Laufzeit ab");
-      console.log("ALL OK (9)");
+      // --- Bilder erstellen und ändern: nur mit Premium, kostet vom Budget
+      const paint = async (c, body) => {
+        const rr = await fetch(base + "/v1/premium/image", { method: "POST", headers: { ...H, "x-device": "geraet-bild-1", ...(c ? { "x-jarvis-premium": c } : {}) }, body: JSON.stringify(body) });
+        return { status: rr.status, j: await rr.json() };
+      };
+      assert.strictEqual((await paint(null, { prompt: "eine Katze im Weltall" })).status, 402);
+      const pic = { mime: "image/jpeg", data: Buffer.alloc(300, 7).toString("base64") };
+      const gold = premium.make("test", 30, 3);
+      let pr = await paint(gold, { prompt: "tausche die Person aus Bild 1 mit der aus Bild 2", images: [pic, pic] });
+      assert.strictEqual(pr.status, 200);
+      assert.deepStrictEqual(pr.j.image, { mime: "image/png", data: "QUJDREVGR0g=" });
+      assert.strictEqual(calls[calls.length - 1].model, "google/gemini-4-flash-image"); assert.strictEqual(calls[calls.length - 1].parts, 3);
+      assert.strictEqual(pr.j.premium.percent, 98);                                               // 3 $ − 0,05 $
+      pr = await paint(gold, { prompt: "etwas verboten es" });
+      assert.strictEqual(pr.status, 422); assert.strictEqual(pr.j.error, "Das kann ich nicht malen.");
+      assert.strictEqual((await premium.status(gold)).percent, 98);                               // (kein Bild – kein Abzug)
+      assert.strictEqual((await paint(gold, { prompt: "x", images: [pic, pic, pic, pic] })).status, 400);
+      ok("Bilder erstellen und ändern geht mit Premium und zählt aufs Budget");
+      console.log("ALL OK (10)");
       process.exit(0);
     } catch (e) { console.error(e); process.exit(1); }
   });

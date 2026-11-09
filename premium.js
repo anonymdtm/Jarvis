@@ -148,6 +148,7 @@ const AUTO = {
   vision: { test: ["claude-haiku", "gemini-flash", "gpt-mini"], basis: ["claude-haiku", "gemini-flash", "gpt-mini"],
     plus: ["claude-sonnet", "gpt", "gemini-pro"], max: ["claude-sonnet", "gpt", "gemini-pro"] },
 };
+let painter = null;                                          // das Modell für „Erstell ein Bild“
 let catalogue = [];                                          // [{ key, name, id, in, out, vision }]  (Preise: Dollar je Token)
 
 /** Baut die Modellliste aus OpenRouters /models (server.js holt sie ohnehin alle 12 Stunden). */
@@ -171,6 +172,12 @@ function setModels(list) {
     }
   }
   if (out.length) catalogue = out;
+  // 1.3.1: Modelle, die Bilder malen und ändern können (PREMIUM_IMAGE_MODEL legt eines fest; sonst Gemini vor GPT vor dem Rest, je das neueste)
+  const painters = (list || []).filter((m) => m && m.id && !String(m.id).endsWith(":free")
+    && (((m.architecture || {}).output_modalities) || []).includes("image") && (((m.architecture || {}).input_modalities) || []).includes("image"));
+  const rank = (m) => (m.id === env.PREMIUM_IMAGE_MODEL ? 0 : /^google\/gemini/.test(m.id) ? 1 : /^openai\/gpt/.test(m.id) ? 2 : 3);
+  painters.sort((a, b) => rank(a) - rank(b) || (b.created || 0) - (a.created || 0));
+  painter = painters[0] ? { id: String(painters[0].id), name: painters[0].name || painters[0].id } : null;
   return catalogue;
 }
 const models = () => catalogue.map((m) => ({ key: m.key, name: m.name, vision: m.vision,
@@ -209,4 +216,4 @@ body:JSON.stringify({plan:document.getElementById("p").value.split("|")[0],days:
 const j=await r.json().catch(()=>({error:"Fehler"}));o.innerHTML="";if(j.code){const c=document.createElement("code");c.textContent=j.code;o.append(c);
 const s=document.createElement("small");s.textContent=j.plan+" · "+j.budget+" $ · gültig bis "+j.until;o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
 
-module.exports = { CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };
+module.exports = { imageModel: () => painter, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };

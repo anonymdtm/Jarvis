@@ -542,6 +542,7 @@ function handleUpgrade(req, socket, head) {
 // ---------------------------------------------------------------- Premium (1.3.0, siehe premium.js)
 const premiumByIp = limiter(30, 2000);
 const adminByIp = limiter(6, 60);                      // (wer das Verwaltungs-Passwort rät, kommt nicht weit)
+const imageByDevice = limiter(Number(env.IMAGE_PER_MINUTE || 4), Number(env.IMAGE_PER_DAY || 60));
 const premiumByDevice = limiter(Number(env.PREMIUM_PER_MINUTE || 20), Number(env.PREMIUM_PER_DAY || 1500));
 async function handlePremium(req, res) {
   const ip = clientIp(req);
@@ -574,6 +575,59 @@ async function handlePremium(req, res) {
     await freeModels();
     const { id, ...out } = st;
     return send(res, 200, { ...out, models: premium.models() });
+  }
+  // 1.3.1 – Sebastian, 9.11.: „der soll auch Bilder generieren können, so wie ChatGPT … wenn ich ihm 3 Bilder schicke und sage,
+  // ändere die Person“. Nur mit Premium (ein Bild kostet ein paar Cent): { "prompt":"…", "images":[{mime,data}] (0–3) }
+  if (req.method === "POST" && req.url === "/v1/premium/image") {
+    if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+    const device = String(req.headers["x-device"] || "").slice(0, 80);
+    if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
+    const limit = premiumByIp(ip) || imageByDevice(device);
+    if (limit) return send(res, 429, { error: limit });
+    const code = String(req.headers["x-jarvis-premium"] || "").slice(0, 60);
+    const st = premium.on() && code ? await premium.status(code) : { ok: false };
+    if (!st.ok) return send(res, 402, { error: "Bilder erstellen geht nur mit Jarvis Premium. Trag unter „Premium“ einen Code ein." });
+    if (!st.active) return send(res, 402, { error: st.expired ? "Dein Premium-Code ist abgelaufen." : "Das Budget deines Premium-Codes ist aufgebraucht." });
+    let body;
+    try { body = JSON.parse(await readBody(req, 5_200_000)); } catch (e) { return send(res, 400, { error: "kaputte Anfrage oder Bilder zu groß" }); }
+    const prompt = typeof body.prompt === "string" ? body.prompt.replace(/\u0000/g, "").trim() : "";
+    const images = body.images === undefined ? [] : body.images;
+    if (prompt.length < 3 || prompt.length > 2000) return send(res, 400, { error: "Beschreib bitte kurz, was auf dem Bild sein soll." });
+    if (!Array.isArray(images) || images.length > 3 || !images.every((im) => im && typeof im.data === "string" && /^image\/(jpeg|png|webp)$/.test(String(im.mime || ""))
+      && im.data.length >= 100 && im.data.length <= CFG.maxImage && /^[A-Za-z0-9+/]+={0,2}$/.test(im.data))) return send(res, 400, { error: "Bild zu groß oder kaputt" });
+    await freeModels();
+    const m = premium.imageModel();
+    if (!m || !CFG.openrouterKey) return send(res, 503, { error: "Gerade ist kein Modell da, das Bilder erstellen kann. Versuch es später nochmal." });
+    const t0 = Date.now();
+    let j;
+    try {
+      const r = await fetch(`${CFG.openrouterBase}/chat/completions`, {
+        method: "POST", signal: AbortSignal.timeout(150_000),
+        headers: { "content-type": "application/json", authorization: `Bearer ${CFG.openrouterKey}`, "x-title": "Jarvis" },
+        body: JSON.stringify({ model: m.id, modalities: ["image", "text"], usage: { include: true }, messages: [{ role: "user",
+          content: [{ type: "text", text: prompt }].concat(images.map((im) => ({ type: "image_url", image_url: { url: `data:${im.mime};base64,${im.data}` } }))) }] }),
+      });
+      if (!r.ok) {
+        console.log(new Date().toISOString(), `WICHTIG: Bild-Modell ${m.id} geht nicht (HTTP ${r.status})${r.status === 402 ? " – Guthaben bei OpenRouter prüfen" : ""}`);
+        return send(res, 503, { error: "Das Bild konnte gerade nicht erstellt werden. Versuch es später nochmal." });
+      }
+      j = await r.json();
+    } catch (e) {
+      return send(res, 503, { error: "Das Bild hat zu lange gedauert. Versuch es nochmal." });
+    }
+    const msg = j.choices?.[0]?.message || {};
+    const url = String(msg.images?.[0]?.image_url?.url || "");
+    const got = url.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
+    const said = typeof msg.content === "string" ? msg.content.trim().slice(0, 600) : "";
+    if (!got) {
+      // (kein Bild – z. B. weil das Modell es ablehnt; was es dazu sagt, sind wenige Sätze an den Nutzer)
+      return send(res, 422, { error: said || "Dazu konnte ich kein Bild erstellen. Beschreib es bitte anders." });
+    }
+    const c = Number(j.usage?.cost) > 0 ? Number(j.usage.cost) : 0.04;
+    premium.charge(st.id, c);
+    console.log(new Date().toISOString(), `premium bild: ${m.id} – ${Date.now() - t0} ms, ${images.length} Bild(er) dazu, ${(c * 100).toFixed(2)} Cent, Code …${st.id.slice(-4)}`);
+    const now = await premium.status(code);
+    return send(res, 200, { image: { mime: got[1], data: got[2] }, text: said, model: m.name, premium: { active: now.active, plan: now.plan, percent: now.percent } });
   }
   return send(res, 404, { error: "nicht gefunden" });
 }
