@@ -199,13 +199,13 @@ input,select,button{font:inherit;padding:10px;border-radius:10px;border:1px soli
 button{background:#2f8cff;border:0;font-weight:600}code{display:block;font-size:20px;padding:14px;background:#111c30;border-radius:10px;word-break:break-all;user-select:all}
 small{color:#8fa3c2}</style><h2>Jarvis Premium – Code erstellen</h2>
 <label>Verwaltungs-Passwort (ADMIN_TOKEN)<input id="t" type="password" autocomplete="off"></label>
-<label>Abo<select id="p"><option value="test">Test (kostenlos für Freunde)</option><option value="basis">Basis</option><option value="plus">Plus</option><option value="max">Max</option></select></label>
+<label>Abo<select id="p"><option value="test|0.5">Bronze – Test, 0,50 $</option><option value="test|1">Silber – Test, 1 $</option><option value="test|3">Gold – Test, 3 $</option><option value="basis">Basis</option><option value="plus">Plus</option><option value="max">Max</option></select></label>
 <label>Laufzeit in Tagen<input id="d" type="number" value="30" min="1" max="400"></label>
 <label>Budget in Dollar <small>(leer = Standard des Abos)</small><input id="b" type="number" step="0.5" min="0.1" max="200" placeholder="Standard"></label>
 <button id="go">Code erstellen</button><div id="out"></div>
 <script>document.getElementById("go").onclick=async()=>{const o=document.getElementById("out");o.textContent="…";
 const r=await fetch("/v1/premium/admin/code",{method:"POST",headers:{"content-type":"application/json","x-admin-token":document.getElementById("t").value},
-body:JSON.stringify({plan:document.getElementById("p").value,days:Number(document.getElementById("d").value),budget:document.getElementById("b").value})});
+body:JSON.stringify({plan:document.getElementById("p").value.split("|")[0],days:Number(document.getElementById("d").value),budget:document.getElementById("b").value||document.getElementById("p").value.split("|")[1]||""})});
 const j=await r.json().catch(()=>({error:"Fehler"}));o.innerHTML="";if(j.code){const c=document.createElement("code");c.textContent=j.code;o.append(c);
 const s=document.createElement("small");s.textContent=j.plan+" · "+j.budget+" $ · gültig bis "+j.until;o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
 
