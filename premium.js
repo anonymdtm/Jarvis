@@ -24,7 +24,7 @@ const CFG = {
   models: (env.PREMIUM_MODELS || "").split(",").map((s) => s.trim()).filter(Boolean),
 };
 const PLAN_IDS = ["test", "basis", "plus", "max"];          // (die Nummer im Code – nie umsortieren)
-const on = () => !!CFG.secret;
+const on = () => CFG.secret.length >= 16;                 // (ein kurzes Geheimnis ließe sich erraten)
 
 // ---------------------------------------------------------------- Codes
 const B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";              // (ohne 0/O und 1/I – wird abgetippt)
