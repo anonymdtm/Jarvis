@@ -7,9 +7,9 @@ window.JARVIS_SITE = {
   setupName: "Jarvis-Setup.exe",
   // die neueste Version – steht direkt an den Download-Knöpfen (ohne Anfrage bei GitHub, also ohne Einwilligung).
   // Wird beim Veröffentlichen automatisch eingetragen (Workflow „Veröffentlichen“), hier also nichts von Hand ändern.
-  androidVersion: "1.0.47",
-  pcVersion: "1.2.15",
-  versionDate: "2026-11-05",
+  androidVersion: "1.0.48",
+  pcVersion: "1.2.16",
+  versionDate: "2026-11-09",
   // Dateigrößen in MB (stehen in den Download-Kacheln) – trägt der Workflow ebenfalls selbst ein
   androidSize: "72",
   pcSize: "67",
