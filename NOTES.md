@@ -1,6 +1,11 @@
-Android-Version: 1.0.47
-PC-Version: 1.2.15
+Android-Version: 1.0.48
+PC-Version: 1.2.16
 
+
+
+1.0.48: Premium-Code und Ruhe beim Öffnen
+- Jarvis hört beim Öffnen der App nicht mehr sofort zu – nur noch, wenn du auf das Mikrofon tippst oder das Aktivierungswort sagst. (Wer es wie früher möchte: Einstellungen → „Beim Öffnen sofort zuhören“.)
+- Neu: Mehr → Premium. Mit einem Premium-Code antworten die starken Modelle (Claude, ChatGPT, Gemini …) statt der kostenlosen. Ohne Code bleibt alles wie bisher kostenlos.
 
 1.0.47: Wecker und Updates
 - „Wecker auf 7:15 Uhr“ stellt den Wecker jetzt wirklich auf 7:15 – vorher wurde daraus 15 Uhr. Auch die Antwort „7:15“ auf „Um wie viel Uhr?“ wird richtig verstanden (vorher rechnete Jarvis 7 geteilt durch 15).
@@ -21,6 +26,11 @@ Neu: Jarvis sieht deinen Bildschirm
 Bilder viel schneller
 - Die Antwort auf ein Bild erscheint Wort für Wort, sobald die KI schreibt – vorher zählen die Sekunden mit.
 - Hängt ein KI-Modell, springt nach wenigen Sekunden ein anderes ein.
+
+
+PC (1.2.16): Premium-Code, Discord einfacher
+- Bei Discord-Anrufen fragt Jarvis nur noch „Soll ich annehmen?“ – du redest dann immer selbst. Das Reden für dich gibt es nicht mehr.
+- Neu: Einstellungen → KI-Gehirn → Premium. Mit einem Premium-Code antworten die starken Modelle statt der kostenlosen.
 
 PC (1.2.15): Discord-Anrufe besser
 - „Kannst du den Anruf annehmen?“ oder „Nimm den Anruf von Max an“ nimmt jetzt wirklich ab – vorher hat Jarvis bei solchen Sätzen gesagt, er könne keine Anrufe annehmen.
