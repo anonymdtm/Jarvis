@@ -1,8 +1,12 @@
-Android-Version: 1.0.49
+Android-Version: 1.0.50
 PC-Version: 1.2.16
 
 
 
+
+
+1.0.50: Wichtige Fehlerbehebung
+- In 1.0.49 antwortete Jarvis auf jeden Befehl mit „Da ist etwas schiefgelaufen (PatternSyntaxException)“. Das ist behoben – bitte gleich aktualisieren.
 
 1.0.49: Bilder erstellen (Premium)
 - „Erstell mir ein Bild von einer Katze im Weltall“ – Jarvis malt es, zeigt es und legt es in deine Galerie (Ordner Jarvis).
