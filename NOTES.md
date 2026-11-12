@@ -1,9 +1,14 @@
-Android-Version: 1.0.50
-PC-Version: 1.2.16
+Android-Version: 1.0.51
+PC-Version: 1.2.17
 
 
 
 
+
+
+1.0.51: Handy findet den PC besser
+- Findet das Handy den PC beim Koppeln nicht, fragt es jetzt jede Adresse im WLAN direkt ab (hilft bei Mesh-WLAN und Repeatern).
+- Neu: Feld „PC-Adresse“ beim Koppeln – die Adresse steht am PC unter dem Code.
 
 1.0.50: Wichtige Fehlerbehebung
 - In 1.0.49 antwortete Jarvis auf jeden Befehl mit „Da ist etwas schiefgelaufen (PatternSyntaxException)“. Das ist behoben – bitte gleich aktualisieren.
@@ -37,6 +42,10 @@ Bilder viel schneller
 - Die Antwort auf ein Bild erscheint Wort für Wort, sobald die KI schreibt – vorher zählen die Sekunden mit.
 - Hängt ein KI-Modell, springt nach wenigen Sekunden ein anderes ein.
 
+
+
+PC (1.2.17): Handy koppeln klappt öfter
+- Neu unter Einstellungen → Handy: „Firewall freigeben“. Meist blockiert die Windows-Firewall das Handy – ein Klick und „Ja“ im Windows-Fenster, freigegeben nur für Geräte im eigenen WLAN.
 
 PC (1.2.16): Premium-Code, Discord einfacher
 - Bei Discord-Anrufen fragt Jarvis nur noch „Soll ich annehmen?“ – du redest dann immer selbst. Das Reden für dich gibt es nicht mehr.
