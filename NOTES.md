@@ -1,10 +1,15 @@
-Android-Version: 1.0.51
-PC-Version: 1.2.17
+Android-Version: 1.0.52
+PC-Version: 1.2.18
 
 
 
 
 
+
+
+1.0.52: PC-Bildschirm besser bedienen
+- Die Handy-Tastatur verdeckt das PC-Bild nicht mehr – alles rückt nach oben.
+- Neuer Knopf „👆 Klick“: klickt dort, wo der blaue Kreis steht. Dazu Rechtsklick, Doppelklick, Strg+A, Strg+Z, Leertaste und Alt+Tab.
 
 1.0.51: Handy findet den PC besser
 - Findet das Handy den PC beim Koppeln nicht, fragt es jetzt jede Adresse im WLAN direkt ab (hilft bei Mesh-WLAN und Repeatern).
@@ -43,6 +48,13 @@ Bilder viel schneller
 - Hängt ein KI-Modell, springt nach wenigen Sekunden ein anderes ein.
 
 
+
+
+PC (1.2.18): Discord und Programme zuverlässiger
+- Ruft dich jemand an, während du in einem Sprachkanal bist, kann Jarvis den Anruf jetzt annehmen (vorher: „schon vorbei“).
+- „Schreib … auf Discord“ klappt auch, wenn die Spracherkennung Wörter zusammenzieht oder Discord falsch schreibt.
+- „Öffne Opera“ findet Programme auch, wenn ein Buchstabe falsch verstanden wurde.
+- Microsoft-Stimmen: Blockiert Windows (Smart App Control) den MP3-Decoder, sagt Jarvis jetzt, wie man es löst – nach dem Ausschalten ist kein Neuinstallieren mehr nötig.
 
 PC (1.2.17): Handy koppeln klappt öfter
 - Neu unter Einstellungen → Handy: „Firewall freigeben“. Meist blockiert die Windows-Firewall das Handy – ein Klick und „Ja“ im Windows-Fenster, freigegeben nur für Geräte im eigenen WLAN.
