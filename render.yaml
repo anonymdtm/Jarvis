@@ -21,3 +21,15 @@ services:
         sync: false
       - key: CF_API_TOKEN
         sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_SECRET
+        sync: false
+      - key: PAYPAL_MODE
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: PREMIUM_SECRET
+        sync: false

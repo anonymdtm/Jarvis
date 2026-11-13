@@ -704,6 +704,35 @@ async function handleFree(req, res, log) {
   return send(res, 404, { error: "nicht gefunden" });
 }
 
+// ---------------------------------------------------------------- Premium kaufen mit PayPal (1.5.0, siehe shop.js)
+const shop = require("./shop.js");
+const shopByIp = limiter(Number(env.SHOP_PER_MINUTE || 10), Number(env.SHOP_PER_DAY || 60));
+async function handleShop(req, res, log) {
+  if (req.method === "GET" && (req.url === "/kaufen" || req.url.startsWith("/kaufen?"))) {
+    if (!shop.on()) { res.writeHead(503, { "content-type": "text/plain; charset=utf-8" }); return res.end("Premium kaufen ist gerade nicht eingerichtet."); }
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-frame-options": "DENY",
+      "x-content-type-options": "nosniff", "referrer-policy": "no-referrer" });
+    return res.end(shop.page());
+  }
+  if (req.method !== "POST") return send(res, 404, { error: "nicht gefunden" });
+  if (!shop.on()) return send(res, 503, { error: "Premium kaufen ist gerade nicht eingerichtet." });
+  const limit = shopByIp(clientIp(req));
+  if (limit) return send(res, 429, { error: limit });
+  try {
+    if (req.url === "/v1/shop/order") return send(res, 200, { id: await shop.createOrder() });
+    if (req.url === "/v1/shop/capture") {
+      let body;
+      try { body = JSON.parse(await readBody(req, 2000) || "{}"); } catch (e) { return send(res, 400, { error: "kaputte Anfrage" }); }
+      const o = await shop.capture(String(body.order || ""), log);
+      return send(res, 200, { code: o.code, email: o.email ? o.email.replace(/^(.).*(@.*)$/, "$1…$2") : "", mailed: Boolean(o.mailed), until: o.until });
+    }
+  } catch (e) {
+    if (!e.status) log(`shop: ${e.message}`);
+    return send(res, e.status || 502, { error: e.status ? e.message : "PayPal ist gerade nicht erreichbar. Es wurde nichts abgebucht.", retry: Boolean(e.retry) });
+  }
+  return send(res, 404, { error: "nicht gefunden" });
+}
+
 const server = http.createServer(async (req, res) => {
   const log = (m) => console.log(new Date().toISOString(), m);   // (nie Inhalte oder Schlüssel)
   try {
@@ -711,6 +740,7 @@ const server = http.createServer(async (req, res) => {
     if (req.url.startsWith("/v1/help/")) return await handleHelp(req, res);
     if (req.url.startsWith("/v1/premium/") || req.url === "/admin") return await handlePremium(req, res);
     if (req.url === "/v1/image" || req.url === "/v1/stt") return await handleFree(req, res, log);
+    if (req.url === "/kaufen" || req.url.startsWith("/kaufen?") || req.url.startsWith("/v1/shop/")) return await handleShop(req, res, log);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
     if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
@@ -802,6 +832,8 @@ function keepAwake() {
 if (require.main === module) {
   if (!CFG.appToken) console.warn("WARNUNG: APP_TOKEN fehlt – der Server nimmt keine Anfragen an.");
   if (!CFG.openrouterKey && !CFG.geminiKey) console.warn("WARNUNG: OPENROUTER_API_KEY fehlt – der Server kann keine Frage beantworten.");
+  if (!shop.on()) console.warn("HINWEIS: PAYPAL_CLIENT_ID / PAYPAL_SECRET (oder PREMIUM_SECRET) fehlen – /kaufen ist aus.");
+  else console.log(`Premium kaufen: ${shop.CFG.live ? "LIVE – echtes Geld" : "PayPal-Sandbox (Testgeld)"}, ${shop.CFG.price} € für ${shop.CFG.days} Tage`);
   if (!cloud.on()) console.warn("HINWEIS: CF_ACCOUNT_ID / CF_API_TOKEN fehlen – kostenlose Bilder und genaues Zuhören (Cloudflare) sind aus.");
   if (premium.on() && !premium.CFG.upstashUrl) console.warn("HINWEIS: Premium ohne UPSTASH_REDIS_REST_URL – der Verbrauch der Codes beginnt nach jedem Neustart wieder bei 0.");
   server.listen(CFG.port, () => {
@@ -810,4 +842,4 @@ if (require.main === module) {
   });
 }
 server.on("upgrade", handleUpgrade);
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop };

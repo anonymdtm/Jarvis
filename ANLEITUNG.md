@@ -121,3 +121,21 @@ Einrichten (einmal, etwa 5 Minuten):
 
 Ohne diese zwei Werte läuft alles wie vorher: Der PC hört dann selbst zu, und Bilder gibt es nur mit Premium.
 Ist das Tageskontingent leer, fragt der Server bis Mitternacht (UTC) nicht mehr bei Cloudflare nach.
+
+## Premium kaufen mit PayPal (ab Server 1.5.0)
+
+Die Seite **https://jarvis-warpline.onrender.com/kaufen** verkauft Premium für 30 Tage. Die Apps öffnen sie über „Premium kaufen (PayPal)“.
+- Den Betrag legt nur der Server fest. Das Geld zieht nur der Server bei PayPal ein. Einen Code gibt es nur, wenn PayPal selbst „bezahlt“ meldet. Wer nur zur PayPal-Seite geht und zurückkommt, bekommt nichts.
+- Der Code erscheint sofort auf der Seite. Mit Brevo geht er außerdem per E-Mail an die PayPal-Adresse des Käufers.
+- Dieselbe Bestellung gibt immer denselben Code. Nichts wird doppelt abgebucht.
+
+Einrichten:
+1. **developer.paypal.com** → mit deinem PayPal-Konto anmelden → **Apps & Credentials** → zuerst **Sandbox** → „Create App“. Dann **Client ID** und **Secret** kopieren.
+2. Bei Render unter **Environment** eintragen: `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_MODE` = `sandbox`. Außerdem `PREMIUM_SECRET`, falls noch nicht gesetzt (mindestens 16 Zeichen, nie ändern, sonst werden alle Codes ungültig).
+3. Testen: Unter **Sandbox → Accounts** hat PayPal schon ein Testkäufer-Konto angelegt (E-Mail und Passwort stehen dort). Auf /kaufen damit bezahlen. Das ist Spielgeld.
+4. Echtes Geld: Mit einem **PayPal-Geschäftskonto** unter **Live** eine App anlegen, deren Client ID und Secret eintragen und `PAYPAL_MODE` = `live` setzen.
+5. Code per E-Mail (freiwillig): bei **brevo.com** kostenlos registrieren (300 Mails am Tag), deine Absender-Adresse bestätigen, unter SMTP & API einen **API-Key** erstellen. Dann `BREVO_API_KEY` und `MAIL_FROM` (die bestätigte Adresse) eintragen.
+6. Freiwillig: `SHOP_PRICE` (Standard 4), `SHOP_DAYS` (30), `SHOP_BUDGET` (2.5 = Dollar KI-Guthaben pro Kauf, damit nach PayPal-Gebühren etwas übrig bleibt), `SHOP_IMPRESSUM` (Link zu deinem Impressum).
+7. Ohne Upstash merkt sich der Server die verkauften Codes nur bis zum nächsten Neustart. Fragt jemand später mit derselben Bestellung, schaut der Server bei PayPal nach.
+
+Vor dem Verkauf mit echtem Geld: Gewerbe anmelden, Impressum, AGB und Widerrufsbelehrung. Auf der Seite ist schon ein Häkchen eingebaut, mit dem der Käufer auf das Widerrufsrecht verzichtet, damit der Code sofort geliefert werden darf. Lass das prüfen.

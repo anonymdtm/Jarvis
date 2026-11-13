@@ -1,6 +1,6 @@
 {
   "name": "jarvis-proxy",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "main": "server.js",
   "engines": {
@@ -8,6 +8,6 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "node test.js && node test_help.js && node test_live.js && node test_speed.js && node test_premium.js && node test_free.js"
+    "test": "node test.js && node test_help.js && node test_live.js && node test_speed.js && node test_premium.js && node test_free.js && node test_shop.js"
   }
 }

@@ -216,4 +216,4 @@ body:JSON.stringify({plan:document.getElementById("p").value.split("|")[0],days:
 const j=await r.json().catch(()=>({error:"Fehler"}));o.innerHTML="";if(j.code){const c=document.createElement("code");c.textContent=j.code;o.append(c);
 const s=document.createElement("small");s.textContent=j.plan+" · "+j.budget+" $ · gültig bis "+j.until;o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
 
-module.exports = { imageModel: () => painter, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };
+module.exports = { imageModel: () => painter, upstash, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };

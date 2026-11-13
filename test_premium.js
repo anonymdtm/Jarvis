@@ -60,7 +60,8 @@ const upstream = http.createServer((req, res) => {
       assert.match(code, /^JV(-[A-HJ-NP-Z2-9]{1,5}){6}$/);
       const c = premium.parse(code.toLowerCase().replace(/-/g, " "));
       assert.strictEqual(c.plan, "test"); assert.strictEqual(c.budget, 1); assert.strictEqual(c.expired, false);
-      const forged = code.slice(0, -1) + (code.endsWith("A") ? "B" : "A");
+      // (eine Stelle in der Mitte – das letzte Zeichen trägt 2 Füllbits, die beim Lesen wegfallen)
+      const forged = code.slice(0, -4) + (code.at(-4) === "A" ? "B" : "A") + code.slice(-3);
       assert.strictEqual(premium.parse(forged), null);
       assert.strictEqual(premium.parse("JV-AAAAA-AAAAA-AAAAA-AAAAA-AAAAA-A"), null);
       ok("Codes sind unterschrieben – ein geänderter oder erfundener Code gilt nicht");
