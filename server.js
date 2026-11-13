@@ -657,7 +657,29 @@ async function imagePrompt(wish, inputs, log) {
   return wish;
 }
 
+// 1.5.0 – Sebastian, 14.11.: „woher soll derjenige wissen, welche KI-Modelle er kostenlos benutzt und welche er mit Premium kriegt?“
+/** "or:google/gemma-4-31b-it:free" → "Gemma 4 31B", "gemini:gemini-2.5-flash" → "Gemini 2.5 Flash" */
+function prettyModel(entry) {
+  let id = String(entry || "").replace(/^(or|gemini):/, "").split("/").pop().replace(/:free$/, "").replace(/-(it|instruct|chat|preview|exp)(?=-|$)/gi, "");
+  return id.split("-").filter(Boolean).map((w) => /^\d+(\.\d+)?[bkm]$/i.test(w) ? w.toUpperCase() : /^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w).join(" ").slice(0, 40);
+}
+async function modelOverview() {
+  await freeModels();
+  const chat = [];
+  for (const e of CFG.chat) { const r = await resolve(e); if (r && r !== "or:openrouter/free") { const n = prettyModel(r); if (n && !chat.includes(n)) chat.push(n); } }
+  const paid = premium.models().map((m) => m.name);
+  const painter = premium.imageModel();
+  return {
+    free: { chat: chat.slice(0, 4), image: cloud.on() ? "FLUX.2 [dev]" : "", hearing: cloud.on() ? "Whisper large-v3-turbo" : "", images_per_day: Number(env.FREE_IMAGE_PER_DAY || 20) },
+    premium: { chat: paid, image: painter ? painter.name : "", pc_control: true },
+  };
+}
+
 async function handleFree(req, res, log) {
+  if (req.method === "GET" && req.url === "/v1/models") {
+    if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+    return send(res, 200, await modelOverview());
+  }
   if (req.method !== "POST") return send(res, 404, { error: "nicht gefunden" });
   if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
   const device = String(req.headers["x-device"] || "").slice(0, 80);
@@ -739,7 +761,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/healthz") return send(res, 200, { ok: true });   // (auch zum Aufwecken)
     if (req.url.startsWith("/v1/help/")) return await handleHelp(req, res);
     if (req.url.startsWith("/v1/premium/") || req.url === "/admin") return await handlePremium(req, res);
-    if (req.url === "/v1/image" || req.url === "/v1/stt") return await handleFree(req, res, log);
+    if (req.url === "/v1/image" || req.url === "/v1/stt" || req.url === "/v1/models") return await handleFree(req, res, log);
     if (req.url === "/kaufen" || req.url.startsWith("/kaufen?") || req.url.startsWith("/v1/shop/")) return await handleShop(req, res, log);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });

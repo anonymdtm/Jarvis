@@ -118,6 +118,12 @@ const upstream = http.createServer((req, res) => {
       assert.strictEqual(r.status, 503); assert.ok(/nicht eingerichtet/.test(r.j.error));
       ok("ohne CF_API_TOKEN: 503 „noch nicht eingerichtet“");
 
+      // --- welche Modelle kostenlos, welche mit Premium
+      const mo = await (await fetch(base + "/v1/models", { headers: H })).json();
+      assert.ok(Array.isArray(mo.free.chat) && Array.isArray(mo.premium.chat));
+      assert.strictEqual((await fetch(base + "/v1/models")).status, 401);
+      ok("/v1/models: Übersicht kostenlos / Premium (nur mit App-Token)");
+
       // --- Formate aus dem Wunsch
       assert.strictEqual(cloud.shapeOf("ein PC-Hintergrund mit Bergen"), "landscape");
       assert.strictEqual(cloud.shapeOf("YouTube Thumbnail für mein Spiel"), "landscape");
