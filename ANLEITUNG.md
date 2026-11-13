@@ -106,3 +106,18 @@ aller Codes zusammen kann es nie kosten.
 (z. B. nach einem Update). Für echte Kunden deshalb kostenlos bei upstash.com eine Redis-Datenbank anlegen und in Render
 `UPSTASH_REDIS_REST_URL` und `UPSTASH_REDIS_REST_TOKEN` eintragen. Zusätzlich bei OpenRouter für den Schlüssel ein
 Ausgabenlimit setzen (Keys → Credit limit).
+
+## Kostenlose Bilder und genaues Zuhören (ab Server 1.4.0)
+
+Über **Cloudflare Workers AI**: 10.000 „Neuronen“ pro Tag sind kostenlos, ohne Kreditkarte.
+- **Bilder (FLUX.2 [dev]):** etwa 60 Bilder in 1024×1024 pro Tag, für alle zusammen. Pro Gerät höchstens `FREE_IMAGE_PER_DAY` (Standard: 20).
+- **Zuhören (Whisper large-v3-turbo):** ein Befehl kostet etwa 3–4 Neuronen. `CF_STT_RESERVE` (Standard: 1500) bleibt immer fürs Zuhören frei.
+
+Einrichten (einmal, etwa 5 Minuten):
+1. Auf **dash.cloudflare.com** kostenlos registrieren.
+2. Die **Account-ID** kopieren. Sie steht links unten unter „Account home“ oder in der Adresszeile (die lange Zeichenfolge nach `dash.cloudflare.com/`).
+3. Unter **Mein Profil → API-Tokens → Token erstellen → Vorlage „Workers AI“** einen Token erstellen und kopieren.
+4. Bei Render unter jarvis-warpline → **Environment** zwei Werte eintragen: `CF_ACCOUNT_ID` = die Account-ID, `CF_API_TOKEN` = der Token. Danach speichern; Render startet den Server neu.
+
+Ohne diese zwei Werte läuft alles wie vorher: Der PC hört dann selbst zu, und Bilder gibt es nur mit Premium.
+Ist das Tageskontingent leer, fragt der Server bis Mitternacht (UTC) nicht mehr bei Cloudflare nach.

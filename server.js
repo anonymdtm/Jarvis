@@ -632,12 +632,85 @@ async function handlePremium(req, res) {
   return send(res, 404, { error: "nicht gefunden" });
 }
 
+// ---------------------------------------------------------------- kostenlos: Bilder und genaues Zuhören (1.4.0, siehe free.js)
+const cloud = require("./free.js");
+const freeImageByDevice = limiter(Number(env.FREE_IMAGE_PER_MINUTE || 3), Number(env.FREE_IMAGE_PER_DAY || 20));
+const sttByDevice = limiter(Number(env.STT_PER_MINUTE || 30), Number(env.STT_PER_DAY || 1500));
+const sttByIp = limiter(60, 4000);
+
+/** „mal mir eine Katze im Weltall“ → ein guter englischer Bild-Prompt (FLUX versteht Englisch am besten). Klappt das nicht
+ *  schnell, geht der Wunsch so, wie er ist. */
+async function imagePrompt(wish, inputs, log) {
+  const system = "You turn a user's wish (often German, often spoken) into ONE prompt for the image model FLUX.2. Write in English, " +
+    "40–120 words: subject, setting, style, light, colours, camera/medium. Keep every detail the user asked for, invent nothing that " +
+    "contradicts it. Text that must appear in the picture stays in its original language, in quotes. " +
+    (inputs ? `The user attached ${inputs} picture(s); refer to them as "image 1", "image 2" … and say exactly what to keep and what to change. ` : "") +
+    "Answer with the prompt only – no quotes around it, no explanation.";
+  try {
+    let text = "";
+    const gen = answer("chat", system, [{ role: "user", content: wish }], 300, () => {}, null, [], true);
+    const stop = Date.now() + 9000;
+    for await (const p of gen) { text += p.text; if (Date.now() > stop) break; }
+    text = text.trim().replace(/^["„“]|["“”]$/g, "");
+    if (text.length >= 10 && text.length <= 1500) return text;
+  } catch (e) { log(`bild-prompt: ${e.message}`); }
+  return wish;
+}
+
+async function handleFree(req, res, log) {
+  if (req.method !== "POST") return send(res, 404, { error: "nicht gefunden" });
+  if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+  const device = String(req.headers["x-device"] || "").slice(0, 80);
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
+  const ip = clientIp(req);
+  if (req.url === "/v1/stt") {
+    // { "audio":"<WAV 16 kHz mono, Base64>", "hint":"Jarvis, Discord, Spotify …" } → { "text":"…" }
+    const limit = sttByIp(ip) || sttByDevice(device);
+    if (limit) return send(res, 429, { error: limit });
+    let body;
+    try { body = JSON.parse(await readBody(req, 1_800_000)); } catch (e) { return send(res, 400, { error: "kaputte Anfrage oder zu lang" }); }
+    const audio = typeof body.audio === "string" ? body.audio : "";
+    if (audio.length < 1000 || audio.length > 1_750_000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(audio)) return send(res, 400, { error: "kein Ton" });
+    const hint = typeof body.hint === "string" ? body.hint.replace(/\u0000/g, "").slice(0, 400) : "";
+    const secs = cloud.wavSeconds(Buffer.from(audio, "base64"));
+    const no = cloud.sttAllowed(secs);
+    if (no) return send(res, 503, { error: no });
+    try { return send(res, 200, { text: await cloud.hear(audio, hint, log), model: "whisper-large-v3-turbo" }); }
+    catch (e) { return send(res, e.status || 503, { error: e.message }); }
+  }
+  if (req.url === "/v1/image") {
+    // { "prompt":"…", "images":[{mime,data}] (0–4, je ≤ 512 px), "shape":"square"|"portrait"|"landscape" } → { image:{mime,data} }
+    const flood = premiumByIp(ip);
+    if (flood) return send(res, 429, { error: flood });
+    let body;
+    try { body = JSON.parse(await readBody(req, 3_000_000)); } catch (e) { return send(res, 400, { error: "kaputte Anfrage oder Bilder zu groß" }); }
+    const wish = typeof body.prompt === "string" ? body.prompt.replace(/\u0000/g, "").trim() : "";
+    const images = body.images === undefined ? [] : body.images;
+    if (wish.length < 3 || wish.length > 2000) return send(res, 400, { error: "Beschreib bitte kurz, was auf dem Bild sein soll." });
+    if (!Array.isArray(images) || images.length > 4 || !images.every((im) => im && typeof im.data === "string" && /^image\/(jpeg|png|webp)$/.test(String(im.mime || ""))
+      && im.data.length >= 100 && im.data.length <= 700_000 && /^[A-Za-z0-9+/]+={0,2}$/.test(im.data))) return send(res, 400, { error: "Bild zu groß oder kaputt" });
+    const shape = ["square", "portrait", "landscape"].includes(body.shape) ? body.shape : cloud.shapeOf(wish);
+    const [w, h] = cloud.size(shape);
+    const no = cloud.imageAllowed(w, h, images.length);
+    if (no) return send(res, cloud.on() ? 429 : 503, { error: no });
+    const limit = freeImageByDevice(device);            // (erst hier: ein kaputter Versuch zählt nicht mit)
+    if (limit) return send(res, 429, { error: limit === "Das Tageslimit ist erreicht – morgen geht es wieder." ? "Für heute hast du genug Bilder gemacht – morgen geht es wieder." : limit });
+    const prompt = await imagePrompt(wish, images.length, log);
+    try {
+      const image = await cloud.paint(prompt, images, shape, log);
+      return send(res, 200, { image, model: "FLUX.2", text: "" });
+    } catch (e) { return send(res, e.status || 503, { error: e.message }); }
+  }
+  return send(res, 404, { error: "nicht gefunden" });
+}
+
 const server = http.createServer(async (req, res) => {
   const log = (m) => console.log(new Date().toISOString(), m);   // (nie Inhalte oder Schlüssel)
   try {
     if (req.method === "GET" && req.url === "/healthz") return send(res, 200, { ok: true });   // (auch zum Aufwecken)
     if (req.url.startsWith("/v1/help/")) return await handleHelp(req, res);
     if (req.url.startsWith("/v1/premium/") || req.url === "/admin") return await handlePremium(req, res);
+    if (req.url === "/v1/image" || req.url === "/v1/stt") return await handleFree(req, res, log);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
     if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
@@ -729,6 +802,7 @@ function keepAwake() {
 if (require.main === module) {
   if (!CFG.appToken) console.warn("WARNUNG: APP_TOKEN fehlt – der Server nimmt keine Anfragen an.");
   if (!CFG.openrouterKey && !CFG.geminiKey) console.warn("WARNUNG: OPENROUTER_API_KEY fehlt – der Server kann keine Frage beantworten.");
+  if (!cloud.on()) console.warn("HINWEIS: CF_ACCOUNT_ID / CF_API_TOKEN fehlen – kostenlose Bilder und genaues Zuhören (Cloudflare) sind aus.");
   if (premium.on() && !premium.CFG.upstashUrl) console.warn("HINWEIS: Premium ohne UPSTASH_REDIS_REST_URL – der Verbrauch der Codes beginnt nach jedem Neustart wieder bei 0.");
   server.listen(CFG.port, () => {
     console.log(`Jarvis-Proxy läuft auf Port ${CFG.port} – Reden: ${CFG.chat.join(" → ")} | Code: ${CFG.code.join(" → ")} | Bilder: ${CFG.vision.join(" → ")}`);
@@ -736,4 +810,4 @@ if (require.main === module) {
   });
 }
 server.on("upgrade", handleUpgrade);
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud };
