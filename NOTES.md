@@ -1,14 +1,13 @@
-Android-Version: 1.0.54
-PC-Version: 1.2.22
+Android-Version: 1.0.55
+PC-Version: 1.2.23
 
-1.0.54: Termine löschen
-- „Termin wieder löschen“ löscht den Termin, den Jarvis gerade eingetragen hat.
-- „Lösch den Zahnarzttermin“ oder „Sag den Termin beim Friseur ab“ findet ihn über den Namen.
-- „Um 15 Uhr einen Termin“ wird nicht mehr zu 15:01 Uhr.
-- Updates werden auch angezeigt, während die App offen bleibt.
+1.0.55: Bilder erstellen und Premium kaufen
+- „Mal mir eine Katze im Weltall“ – Bilder gibt es jetzt auch kostenlos (FLUX.2), mit Premium das beste Bild-Modell.
+- Premium kannst du jetzt mit PayPal kaufen (Mehr → Premium). Der Code kommt sofort und per E-Mail.
+- Unter Premium siehst du, welche KI-Modelle kostenlos sind und welche du mit Premium bekommst.
+- Den PC-Bildschirm ansehen bleibt kostenlos. Den PC vom Handy aus steuern geht jetzt mit Premium.
 
-PC (1.2.22)
-- „Jetzt laden“ lädt das Update selbst und startet das Setup.
-- Jarvis spricht schon beim ersten Satz los, statt auf die ganze Antwort zu warten.
-- Termine löschen und „Habe ich morgen Termine?“ gehen ans Handy.
-- Updates werden alle 10 Minuten geprüft.
+PC (1.2.23)
+- „Mal mir …“ / „Erstell ein Logo …“ erstellt Bilder (Bilder → Jarvis).
+- Genauer zuhören: Deine Befehle hört zusätzlich Whisper large-v3-turbo.
+- Premium kaufen und die Modell-Übersicht unter Einstellungen → KI.
