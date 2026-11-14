@@ -113,9 +113,36 @@ function charge(id, dollars) {
 }
 
 /** Was ein Code gerade wert ist. */
-async function status(code) {
+// ---------------------------------------------------------------- 1.6.0: jeder Code nur für ein Gerät (+ den gekoppelten PC)
+// Sebastian, 14.11.: „dass jeder Promocode nur einmal gültig ist … sobald du den eingelöst hast, funktioniert er nicht mehr“.
+// Das erste Gerät, das einen Code benutzt, bekommt ihn; dazu darf noch eins (Handy + PC). Ein drittes bekommt „schon eingelöst“.
+const MAX_DEVICES = Number(env.PREMIUM_DEVICES || 2);
+const owners = new Map();                                    // Code-ID → Set(Geräte)
+async function devices(id) {
+  if (owners.has(id)) return owners.get(id);
+  const set = new Set();
+  const v = await upstash("SMEMBERS", `jarvis:dev:${id}`);
+  if (Array.isArray(v)) for (const d of v) set.add(String(d));
+  owners.set(id, set);
+  return set;
+}
+/** Darf [device] diesen Code benutzen? Das erste Mal wird es eingetragen. */
+async function claim(id, device) {
+  if (!device) return true;
+  const set = await devices(id);
+  if (set.has(device)) return true;
+  if (set.size >= MAX_DEVICES) return false;
+  set.add(device);
+  upstash("SADD", `jarvis:dev:${id}`, device).then(() => upstash("EXPIRE", `jarvis:dev:${id}`, 420 * 86_400));
+  return true;
+}
+
+async function status(code, device = "") {
   const c = parse(code);
   if (!c) return { ok: false, error: "Diesen Code kenne ich nicht. Prüf ihn bitte noch einmal." };
+  if (!(await claim(c.id, String(device || "").slice(0, 80)))) {
+    return { ok: false, taken: true, error: "Dieser Code wurde schon auf einem anderen Gerät eingelöst – jeder Code gilt nur für ein Handy (und den gekoppelten PC)." };
+  }
   const u = await spent(c.id);
   const left = Math.max(0, c.budget - u);
   return {
@@ -203,17 +230,25 @@ function cost(model, usage, charsIn, charsOut) {
 const ADMIN_PAGE = `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jarvis Premium – Codes</title><style>body{font:16px system-ui;background:#0b1220;color:#e6edf7;max-width:520px;margin:32px auto;padding:0 16px}
 input,select,button{font:inherit;padding:10px;border-radius:10px;border:1px solid #2b3a55;background:#111c30;color:inherit;width:100%;box-sizing:border-box;margin:6px 0 14px}
-button{background:#2f8cff;border:0;font-weight:600}code{display:block;font-size:20px;padding:14px;background:#111c30;border-radius:10px;word-break:break-all;user-select:all}
-small{color:#8fa3c2}</style><h2>Jarvis Premium – Code erstellen</h2>
-<label>Verwaltungs-Passwort (ADMIN_TOKEN)<input id="t" type="password" autocomplete="off"></label>
-<label>Abo<select id="p"><option value="test|0.5">Bronze – Test, 0,50 $</option><option value="test|1">Silber – Test, 1 $</option><option value="test|3">Gold – Test, 3 $</option><option value="basis">Basis</option><option value="plus">Plus</option><option value="max">Max</option></select></label>
+button{background:#2f8cff;border:0;font-weight:700;cursor:pointer}#go{font-size:18px;padding:14px}code{display:block;font-size:20px;padding:14px;background:#111c30;border-radius:10px;word-break:break-all;user-select:all}
+small{color:#8fa3c2}details{margin:8px 0 14px}summary{cursor:pointer;color:#8fa3c2}#copy{background:#1d2b45;margin-top:8px}</style>
+<h2>Jarvis Premium – Promo-Code</h2>
+<label>Verwaltungs-Passwort (ADMIN_TOKEN)<input id="t" type="password" autocomplete="current-password"></label>
+<button id="go">Promo-Code erstellen</button>
+<small>Ein Code für einen Freund: 30 Tage Premium, 1 $ KI-Guthaben. Jeder Code gilt nur für <b>ein</b> Handy (und dessen gekoppelten PC) – danach geht er nirgends mehr.</small>
+<details><summary>Mehr Optionen</summary>
+<label>Abo<select id="p"><option value="test|1" selected>Freund – 1 $ Guthaben</option><option value="test|0.5">Klein – 0,50 $</option><option value="test|3">Groß – 3 $</option><option value="basis">Basis – 4 $</option><option value="plus">Plus – 7 $</option><option value="max">Max – 15 $</option></select></label>
+<small>Der Betrag ist das KI-Guthaben im Code (was die starken Modelle dich höchstens kosten) – nicht der Preis.</small>
 <label>Laufzeit in Tagen<input id="d" type="number" value="30" min="1" max="400"></label>
-<label>Budget in Dollar <small>(leer = Standard des Abos)</small><input id="b" type="number" step="0.5" min="0.1" max="200" placeholder="Standard"></label>
-<button id="go">Code erstellen</button><div id="out"></div>
-<script>document.getElementById("go").onclick=async()=>{const o=document.getElementById("out");o.textContent="…";
-const r=await fetch("/v1/premium/admin/code",{method:"POST",headers:{"content-type":"application/json","x-admin-token":document.getElementById("t").value},
+<label>Budget in Dollar <small>(leer = wie oben)</small><input id="b" type="number" step="0.5" min="0.1" max="200" placeholder="wie oben"></label></details>
+<div id="out"></div>
+<script>try{const k=sessionStorage.getItem("jt");if(k)document.getElementById("t").value=k}catch(e){}
+document.getElementById("go").onclick=async()=>{const o=document.getElementById("out");o.textContent="…";const t=document.getElementById("t").value;
+try{sessionStorage.setItem("jt",t)}catch(e){}
+const r=await fetch("/v1/premium/admin/code",{method:"POST",headers:{"content-type":"application/json","x-admin-token":t},
 body:JSON.stringify({plan:document.getElementById("p").value.split("|")[0],days:Number(document.getElementById("d").value),budget:document.getElementById("b").value||document.getElementById("p").value.split("|")[1]||""})});
 const j=await r.json().catch(()=>({error:"Fehler"}));o.innerHTML="";if(j.code){const c=document.createElement("code");c.textContent=j.code;o.append(c);
-const s=document.createElement("small");s.textContent=j.plan+" · "+j.budget+" $ · gültig bis "+j.until;o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
+const b=document.createElement("button");b.id="copy";b.textContent="Code kopieren";b.onclick=()=>{navigator.clipboard.writeText(j.code);b.textContent="Kopiert ✓"};o.append(b);
+const s=document.createElement("small");s.textContent=j.budget+" $ Guthaben · gültig bis "+j.until.split("-").reverse().join(".")+" · nur für ein Gerät";o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
 
-module.exports = { imageModel: () => painter, upstash, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };
+module.exports = { imageModel: () => painter, upstash, owners, MAX_DEVICES, claim, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };

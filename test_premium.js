@@ -19,6 +19,7 @@ const upstream = http.createServer((req, res) => {
   let b = "";
   req.on("data", (c) => (b += c));
   req.on("end", () => {
+    if (req.url.startsWith("/or/credits")) { res.writeHead(200, { "content-type": "application/json" }); return res.end(JSON.stringify({ data: { total_credits: 10, total_usage: 1 } })); }
     if (req.url.startsWith("/or/models")) { res.writeHead(200, { "content-type": "application/json" }); return res.end(JSON.stringify({ data: MODELS })); }
     const j = JSON.parse(b);
     calls.push({ model: j.model, usage: j.usage, parts: Array.isArray(j.messages[0].content) ? j.messages[0].content.length : 0 });

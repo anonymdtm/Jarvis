@@ -148,7 +148,7 @@ async function mail(to, code, until, log) {
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 /** Die Kaufseite. */
-function page() {
+function page(o = {}) {
   const price = CFG.price.replace(".", ",");
   return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jarvis Premium kaufen</title><style>
@@ -163,7 +163,7 @@ button{background:#46e0ff;color:#04111f;border:0;border-radius:10px;padding:10px
 </style></head><body><main>
 <h1>Jarvis Premium</h1><div class="muted">Warpline Games</div>
 <div class="card"><div class="price">${esc(price)} €</div><div class="muted">einmalig für ${CFG.days} Tage – kein Abo, verlängert sich nicht</div>
-<ul><li>Die besten KI-Modelle für Antworten (z. B. Claude, GPT)</li><li>Bilder erstellen mit dem besten Bild-Modell</li><li>Höhere Limits</li></ul>
+<ul><li>Deinen PC vom Handy aus steuern (Befehle, Klicken, Tippen)</li>${o.strong ? "<li>Die starken KI-Modelle für Antworten (z. B. Claude, ChatGPT, Gemini)</li><li>Bilder mit dem besten Bild-Modell</li>" : ""}<li>Höhere Limits</li></ul>
 <div class="muted">Den Code bekommst du sofort hier angezeigt und per E-Mail an deine PayPal-Adresse.</div></div>
 ${CFG.live ? "" : '<div class="card muted"><b>Testmodus (PayPal-Sandbox):</b> hier fließt kein echtes Geld. Zum Bezahlen ein Sandbox-Käuferkonto nehmen.</div>'}
 <div id="buy"><label><input type="checkbox" id="agree"><span>Ich möchte den Code sofort bekommen und weiß, dass mein Widerrufsrecht damit erlischt, sobald der Code angezeigt wird.</span></label>

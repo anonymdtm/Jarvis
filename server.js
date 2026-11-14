@@ -570,11 +570,11 @@ async function handlePremium(req, res) {
     const limit = premiumByIp(ip);
     if (limit) return send(res, 429, { error: limit });
     if (!premium.on()) return send(res, 200, { ok: false, error: "Premium gibt es auf diesem Server noch nicht." });
-    const st = await premium.status(String(req.headers["x-jarvis-premium"] || "").slice(0, 60));
+    const st = await premium.status(String(req.headers["x-jarvis-premium"] || "").slice(0, 60), String(req.headers["x-device"] || ""));
     if (!st.ok) return send(res, 200, st);
     await freeModels();
     const { id, ...out } = st;
-    return send(res, 200, { ...out, models: premium.models() });
+    return send(res, 200, { ...out, models: (await paidReady()) ? premium.models() : [] });
   }
   // 1.3.1 – Sebastian, 9.11.: „der soll auch Bilder generieren können, so wie ChatGPT … wenn ich ihm 3 Bilder schicke und sage,
   // ändere die Person“. Nur mit Premium (ein Bild kostet ein paar Cent): { "prompt":"…", "images":[{mime,data}] (0–3) }
@@ -585,7 +585,7 @@ async function handlePremium(req, res) {
     const limit = premiumByIp(ip) || imageByDevice(device);
     if (limit) return send(res, 429, { error: limit });
     const code = String(req.headers["x-jarvis-premium"] || "").slice(0, 60);
-    const st = premium.on() && code ? await premium.status(code) : { ok: false };
+    const st = premium.on() && code ? await premium.status(code, device) : { ok: false };
     if (!st.ok) return send(res, 402, { error: "Bilder erstellen geht nur mit Jarvis Premium. Trag unter „Premium“ einen Code ein." });
     if (!st.active) return send(res, 402, { error: st.expired ? "Dein Premium-Code ist abgelaufen." : "Das Budget deines Premium-Codes ist aufgebraucht." });
     let body;
@@ -663,15 +663,32 @@ function prettyModel(entry) {
   let id = String(entry || "").replace(/^(or|gemini):/, "").split("/").pop().replace(/:free$/, "").replace(/-(it|instruct|chat|preview|exp)(?=-|$)/gi, "");
   return id.split("-").filter(Boolean).map((w) => /^\d+(\.\d+)?[bkm]$/i.test(w) ? w.toUpperCase() : /^[a-z]/.test(w) ? w[0].toUpperCase() + w.slice(1) : w).join(" ").slice(0, 40);
 }
+// 1.6.0 – Sebastian, 14.11.: „nur die Sachen auflisten, die man wirklich bekommt“. Die starken Modelle laufen nur mit Guthaben
+// bei OpenRouter – ohne Guthaben stehen sie nicht in der Liste (und nicht auf der Kaufseite). Alle 10 Minuten nachgesehen.
+const paid = { ok: false, at: 0, left: 0 };
+async function paidReady() {
+  if (Date.now() - paid.at < 10 * 60_000) return paid.ok;
+  paid.at = Date.now();
+  if (!CFG.openrouterKey) { paid.ok = false; return false; }
+  try {
+    const r = await fetch(`${CFG.openrouterBase}/credits`, { signal: AbortSignal.timeout(10_000), headers: { authorization: `Bearer ${CFG.openrouterKey}` } });
+    const j = await r.json();
+    paid.left = Number(j?.data?.total_credits || 0) - Number(j?.data?.total_usage || 0);
+    paid.ok = r.ok && paid.left >= 0.2;
+  } catch (e) { /* (wie zuletzt) */ }
+  return paid.ok;
+}
+
 async function modelOverview() {
   await freeModels();
   const chat = [];
   for (const e of CFG.chat) { const r = await resolve(e); if (r && r !== "or:openrouter/free") { const n = prettyModel(r); if (n && !chat.includes(n)) chat.push(n); } }
-  const paid = premium.models().map((m) => m.name);
-  const painter = premium.imageModel();
+  const ready = await paidReady();
+  const strong = ready ? premium.models().map((m) => m.name) : [];
+  const painter = ready ? premium.imageModel() : null;
   return {
     free: { chat: chat.slice(0, 4), image: cloud.on() ? "FLUX.2 [dev]" : "", hearing: cloud.on() ? "Whisper large-v3-turbo" : "", images_per_day: Number(env.FREE_IMAGE_PER_DAY || 20) },
-    premium: { chat: paid, image: painter ? painter.name : "", pc_control: true },
+    premium: { chat: strong, image: painter ? painter.name : "", pc_control: true, strong_models: ready },
   };
 }
 
@@ -732,9 +749,10 @@ const shopByIp = limiter(Number(env.SHOP_PER_MINUTE || 10), Number(env.SHOP_PER_
 async function handleShop(req, res, log) {
   if (req.method === "GET" && (req.url === "/kaufen" || req.url.startsWith("/kaufen?"))) {
     if (!shop.on()) { res.writeHead(503, { "content-type": "text/plain; charset=utf-8" }); return res.end("Premium kaufen ist gerade nicht eingerichtet."); }
+    const ready = await paidReady();
     res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-frame-options": "DENY",
       "x-content-type-options": "nosniff", "referrer-policy": "no-referrer" });
-    return res.end(shop.page());
+    return res.end(shop.page({ strong: ready }));
   }
   if (req.method !== "POST") return send(res, 404, { error: "nicht gefunden" });
   if (!shop.on()) return send(res, 503, { error: "Premium kaufen ist gerade nicht eingerichtet." });
@@ -773,7 +791,7 @@ const server = http.createServer(async (req, res) => {
     let prem = null, premNote = null;
     const code = String(req.headers["x-jarvis-premium"] || "").slice(0, 60);
     if (code && premium.on()) {
-      const st = await premium.status(code);
+      const st = await premium.status(code, device);
       if (st.ok && st.active) prem = { id: st.id, plan: st.plan };
       else if (st.ok) premNote = { active: false, reason: st.expired ? "abgelaufen" : "leer" };
     }
@@ -790,6 +808,9 @@ const server = http.createServer(async (req, res) => {
       await freeModels();
       prem.model = premium.pick(prem.plan, input.task, input.model);
       if (!prem.model) prem = null;                       // (die Liste der bezahlten Modelle ist gerade nicht da)
+      // 1.6.0: kein Guthaben bei OpenRouter → gleich die kostenlosen Modelle (statt erst den bezahlten Fehler abzuwarten);
+      // die großzügigen Premium-Grenzen bleiben
+      else if (!(await paidReady())) prem.free = true;
     }
     if (!prem) {
       const cap = allowedAll();
@@ -801,7 +822,7 @@ const server = http.createServer(async (req, res) => {
       const st = await premium.status(code);
       return { premium: { active: st.active, plan: st.plan, percent: st.percent, ...(prem.fellBack ? { fallback: true } : {}) } };
     };
-    const gen = prem ? paidAnswer(prem, input, log)
+    const gen = prem && !prem.free ? paidAnswer(prem, input, log)
       : answer(input.task, input.system, input.messages, input.maxTokens, log, input.image, input.prefer, input.fast);
     if (!input.stream) {
       let text = "", model = "";
