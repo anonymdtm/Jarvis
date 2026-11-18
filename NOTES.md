@@ -1,11 +1,9 @@
-Android-Version: 1.0.58
-PC-Version: 1.2.27
+Android-Version: 1.0.59
+PC-Version: 1.2.28
 
-1.0.58: Termine und Premium
-- „Trag einen Zahnarzttermin ein, am Freitag um 11 Uhr“ klappt jetzt auch, wenn das „ein“ in der Mitte steht oder ein Tippfehler drin ist.
-- Dein Premium-Code geht jede Minute an den PC, bis der ihn hat.
+1.0.59: Das Jarvis-Konto
+- Melde dich mit Google oder einem Code per E-Mail an (Mehr → Premium → Anmelden). Dein Premium gilt dann auf all deinen Geräten, auch auf einem neuen Handy.
+- Ein Code, den du einlöst oder kaufst, während du angemeldet bist, landet direkt auf deinem Konto.
 
-PC (1.2.27)
-- „Jetzt laden“ und „Später“ reagieren sofort.
-- Termine mit Tag oder Uhrzeit gehen immer ans Handy, auch mit Tippfehler. Jarvis erfindet keine Termine mehr.
-- Klappt die Premium-Übernahme vom Handy nicht, steht der Grund im Verlauf.
+PC (1.2.28)
+- Das Konto gibt es auch am PC: Einstellungen → KI → Konto. Wer angemeldet ist, bekommt Premium automatisch.
