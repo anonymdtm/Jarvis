@@ -570,7 +570,8 @@ async function handlePremium(req, res) {
     const limit = premiumByIp(ip);
     if (limit) return send(res, 429, { error: limit });
     if (!premium.on()) return send(res, 200, { ok: false, error: "Premium gibt es auf diesem Server noch nicht." });
-    const st = await premium.status(String(req.headers["x-jarvis-premium"] || "").slice(0, 60), String(req.headers["x-device"] || ""));
+    const who = await premiumFor(req, String(req.headers["x-device"] || ""));
+    const st = await premium.status(who.code, who.claim);
     if (!st.ok) return send(res, 200, st);
     await freeModels();
     const { id, ...out } = st;
@@ -584,8 +585,9 @@ async function handlePremium(req, res) {
     if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
     const limit = premiumByIp(ip) || imageByDevice(device);
     if (limit) return send(res, 429, { error: limit });
-    const code = String(req.headers["x-jarvis-premium"] || "").slice(0, 60);
-    const st = premium.on() && code ? await premium.status(code, device) : { ok: false };
+    const who = await premiumFor(req, device);
+    const code = who.code;
+    const st = premium.on() && code ? await premium.status(code, who.claim) : { ok: false };
     if (!st.ok) return send(res, 402, { error: "Bilder erstellen geht nur mit Jarvis Premium. Trag unter „Premium“ einen Code ein." });
     if (!st.active) return send(res, 402, { error: st.expired ? "Dein Premium-Code ist abgelaufen." : "Das Budget deines Premium-Codes ist aufgebraucht." });
     let body;
@@ -764,11 +766,77 @@ async function handleShop(req, res, log) {
       let body;
       try { body = JSON.parse(await readBody(req, 2000) || "{}"); } catch (e) { return send(res, 400, { error: "kaputte Anfrage" }); }
       const o = await shop.capture(String(body.order || ""), log);
-      return send(res, 200, { code: o.code, email: o.email ? o.email.replace(/^(.).*(@.*)$/, "$1…$2") : "", mailed: Boolean(o.mailed), until: o.until });
+      // 1.7.0: über die App gekauft (angemeldet) → der Code kommt gleich aufs Konto, auf allen Geräten
+      const acct = account.ticketAccount(String(body.t || ""));
+      if (acct) { try { await account.attach(acct, o.code); o.onAccount = true; } catch (e) { log(`kauf aufs konto: ${e.message}`); } }
+      return send(res, 200, { code: o.code, email: o.email ? o.email.replace(/^(.).*(@.*)$/, "$1…$2") : "", mailed: Boolean(o.mailed), until: o.until, account: Boolean(o.onAccount) });
     }
   } catch (e) {
     if (!e.status) log(`shop: ${e.message}`);
     return send(res, e.status || 502, { error: e.status ? e.message : "PayPal ist gerade nicht erreichbar. Es wurde nichts abgebucht.", retry: Boolean(e.retry) });
+  }
+  return send(res, 404, { error: "nicht gefunden" });
+}
+
+// ---------------------------------------------------------------- Konten (1.7.0, siehe account.js)
+const account = require("./account.js");
+const accountByIp = limiter(Number(env.ACCOUNT_PER_MINUTE || 40), Number(env.ACCOUNT_PER_DAY || 600));
+
+/** Welcher Premium-Code gilt für diese Anfrage – der des angemeldeten Kontos zuerst – und wem er zugerechnet wird
+ *  (ein Konto zählt als ein „Gerät“, egal auf wie vielen Geräten es angemeldet ist). */
+async function premiumFor(req, device) {
+  const header = String(req.headers["x-jarvis-premium"] || "").slice(0, 60).trim().toUpperCase();
+  const tok = String(req.headers["x-jarvis-account"] || "");
+  if (tok) {
+    const s = await account.session(tok).catch(() => null);
+    if (s && s.a.code && (!header || header === s.a.code)) return { code: s.a.code, claim: `acct:${s.id}` };
+  }
+  return { code: header, claim: device };
+}
+
+async function handleAccount(req, res, log) {
+  const url = new URL(req.url, "http://x");
+  const p = url.pathname;
+  // (das Nachfragen während der Google-Anmeldung – alle 2–3 Sekunden – zählt nicht mit)
+  const limit = p === "/v1/account/google/poll" ? "" : accountByIp(clientIp(req));
+  if (limit) return send(res, 429, { error: limit });
+  const html = (code, body) => { res.writeHead(code, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-frame-options": "DENY",
+    "referrer-policy": "no-referrer", "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'" }); return res.end(body); };
+  // --- Seiten im Browser (Google)
+  if (req.method === "GET" && p === "/v1/account/google/start") {
+    const to = account.googleRedirect(url.searchParams.get("p"));
+    if (!to) return html(410, account.page("Abgelaufen", "<p>Diese Anmeldung ist abgelaufen. Starte sie in der Jarvis-App noch einmal.</p>"));
+    res.writeHead(302, { location: to, "cache-control": "no-store" }); return res.end();
+  }
+  if (req.method === "GET" && p === "/v1/account/google/callback") {
+    if (url.searchParams.get("error")) return html(200, account.page("Abgebrochen", "<p>Die Anmeldung wurde abgebrochen. Du kannst dieses Fenster schließen.</p>"));
+    return html(200, await account.googleCallback(url.searchParams.get("code"), url.searchParams.get("state"), log));
+  }
+  if (req.method === "POST" && p === "/v1/account/google/confirm") {
+    let form;
+    try { form = new URLSearchParams(await readBody(req, 2000)); } catch (e) { return html(400, account.page("Fehler", "<p>Kaputte Anfrage.</p>")); }
+    return html(200, await account.googleConfirm(form.get("p"), form.get("c")));
+  }
+  // --- die Apps
+  if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+  if (!account.on()) return send(res, 503, { error: "Konten gibt es auf diesem Server noch nicht." });
+  const body = async () => { try { return JSON.parse(await readBody(req, 4000) || "{}"); } catch (e) { return {}; } };
+  const me = async () => account.session(String(req.headers["x-jarvis-account"] || ""));
+  try {
+    if (req.method === "GET" && p === "/v1/account/ways") return send(res, 200, { mail: account.canMail(), google: account.canGoogle(), persistent: account.persistent() });
+    if (req.method === "POST" && p === "/v1/account/mail/start") { await account.mailStart((await body()).email, log); return send(res, 200, { ok: true }); }
+    if (req.method === "POST" && p === "/v1/account/mail/verify") { const b = await body(); return send(res, 200, { ok: true, ...(await account.mailVerify(b.email, b.code)) }); }
+    if (req.method === "POST" && p === "/v1/account/google/begin") return send(res, 200, { ok: true, ...account.googleBegin((await body()).device) });
+    if (req.method === "POST" && p === "/v1/account/google/poll") return send(res, 200, await account.googlePoll((await body()).poll));
+    const s = await me();
+    if (!s) return send(res, 401, { error: "Bitte melde dich neu an.", relogin: true });
+    if (req.method === "GET" && p === "/v1/account/me") return send(res, 200, { ok: true, ...(await account.view(s.id, s.a)) });
+    if (req.method === "POST" && p === "/v1/account/redeem") return send(res, 200, { ok: true, ...(await account.attach(s.id, String((await body()).code || "").slice(0, 60), String(req.headers["x-device"] || "").slice(0, 80))) });
+    if (req.method === "POST" && p === "/v1/account/buy") return send(res, 200, { ok: true, url: `${account.CFG.publicUrl}/kaufen?t=${account.buyTicket(s.id)}` });
+    if (req.method === "POST" && p === "/v1/account/logout-all") { await account.logoutEverywhere(s.id); return send(res, 200, { ok: true }); }
+  } catch (e) {
+    if (!e.status) log(`konto: ${e.message}`);
+    return send(res, e.status || 500, { error: e.status ? e.message : "Da ist etwas schiefgegangen." });
   }
   return send(res, 404, { error: "nicht gefunden" });
 }
@@ -781,6 +849,7 @@ const server = http.createServer(async (req, res) => {
     if (req.url.startsWith("/v1/premium/") || req.url === "/admin") return await handlePremium(req, res);
     if (req.url === "/v1/image" || req.url === "/v1/stt" || req.url === "/v1/models") return await handleFree(req, res, log);
     if (req.url === "/kaufen" || req.url.startsWith("/kaufen?") || req.url.startsWith("/v1/shop/")) return await handleShop(req, res, log);
+    if (req.url.startsWith("/v1/account/")) return await handleAccount(req, res, log);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
     if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
@@ -789,9 +858,10 @@ const server = http.createServer(async (req, res) => {
     if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
     // Premium: ein gültiger Code mit Rest-Budget – eigene (großzügige) Grenzen, das Tageslimit der Gratis-Modelle gilt nicht
     let prem = null, premNote = null;
-    const code = String(req.headers["x-jarvis-premium"] || "").slice(0, 60);
+    const who = await premiumFor(req, device);
+    const code = who.code;
     if (code && premium.on()) {
-      const st = await premium.status(code, device);
+      const st = await premium.status(code, who.claim);
       if (st.ok && st.active) prem = { id: st.id, plan: st.plan };
       else if (st.ok) premNote = { active: false, reason: st.expired ? "abgelaufen" : "leer" };
     }
@@ -875,6 +945,7 @@ function keepAwake() {
 if (require.main === module) {
   if (!CFG.appToken) console.warn("WARNUNG: APP_TOKEN fehlt – der Server nimmt keine Anfragen an.");
   if (!CFG.openrouterKey && !CFG.geminiKey) console.warn("WARNUNG: OPENROUTER_API_KEY fehlt – der Server kann keine Frage beantworten.");
+  if (!account.persistent()) console.warn("HINWEIS: UPSTASH_REDIS_REST_URL / _TOKEN fehlen – Konten, Guthaben und eingelöste Codes vergisst der Server bei jedem Neustart.");
   if (!shop.on()) console.warn("HINWEIS: PAYPAL_CLIENT_ID / PAYPAL_SECRET (oder PREMIUM_SECRET) fehlen – /kaufen ist aus.");
   else console.log(`Premium kaufen: ${shop.CFG.live ? "LIVE – echtes Geld" : "PayPal-Sandbox (Testgeld)"}, ${shop.CFG.price} € für ${shop.CFG.days} Tage`);
   if (!cloud.on()) console.warn("HINWEIS: CF_ACCOUNT_ID / CF_API_TOKEN fehlen – kostenlose Bilder und genaues Zuhören (Cloudflare) sind aus.");
@@ -885,4 +956,4 @@ if (require.main === module) {
   });
 }
 server.on("upgrade", handleUpgrade);
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop, account };

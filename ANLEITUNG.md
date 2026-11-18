@@ -139,3 +139,15 @@ Einrichten:
 7. Ohne Upstash merkt sich der Server die verkauften Codes nur bis zum nächsten Neustart. Fragt jemand später mit derselben Bestellung, schaut der Server bei PayPal nach.
 
 Vor dem Verkauf mit echtem Geld: Gewerbe anmelden, Impressum, AGB und Widerrufsbelehrung. Auf der Seite ist schon ein Häkchen eingebaut, mit dem der Käufer auf das Widerrufsrecht verzichtet, damit der Code sofort geliefert werden darf. Lass das prüfen.
+
+## Jarvis-Konto (ab Server 1.7.0)
+
+Ein Konto ist eine E-Mail-Adresse. Anmelden geht mit Google oder mit einem 6-stelligen Code per E-Mail. Mit derselben Adresse landest du immer im selben Konto. Premium hängt am Konto: Löst du einen Code ein oder kaufst du, während du angemeldet bist, gilt Premium auf allen deinen Geräten.
+
+Einrichten:
+1. **Upstash** (Pflicht, sonst vergisst der Server Konten bei jedem Neustart): Auf upstash.com kostenlos registrieren und unter „Create Database“ eine Redis-Datenbank anlegen (Region Frankfurt). Bei Render `UPSTASH_REDIS_REST_URL` und `UPSTASH_REDIS_REST_TOKEN` eintragen.
+2. **E-Mail-Code:** Brevo wie oben einrichten (`BREVO_API_KEY`, `MAIL_FROM`).
+3. **Google:** Auf console.cloud.google.com ein Projekt „Jarvis“ anlegen.
+   - Unter „APIs & Dienste → OAuth-Zustimmungsbildschirm“ den Typ „Extern“ wählen, App-Name „Jarvis“, deine Mail eintragen und auf „Veröffentlichen“ klicken. Für E-Mail und Name ist keine Prüfung durch Google nötig.
+   - Unter „Anmeldedaten → OAuth-Client-ID“ den Typ „Webanwendung“ wählen. Als autorisierte Weiterleitungs-URI `https://jarvis-warpline.onrender.com/v1/account/google/callback` eintragen.
+   - Bei Render `GOOGLE_CLIENT_ID` und `GOOGLE_CLIENT_SECRET` eintragen.

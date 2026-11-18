@@ -127,11 +127,11 @@ async function devices(id) {
   return set;
 }
 /** Darf [device] diesen Code benutzen? Das erste Mal wird es eingetragen. */
-async function claim(id, device) {
+async function claim(id, device, force = false) {
   if (!device) return true;
   const set = await devices(id);
   if (set.has(device)) return true;
-  if (set.size >= MAX_DEVICES) return false;
+  if (set.size >= MAX_DEVICES && !force) return false;
   set.add(device);
   upstash("SADD", `jarvis:dev:${id}`, device).then(() => upstash("EXPIRE", `jarvis:dev:${id}`, 420 * 86_400));
   return true;

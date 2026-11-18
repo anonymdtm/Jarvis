@@ -182,9 +182,9 @@ if(!window.paypal){msg("PayPal konnte nicht geladen werden. Lade die Seite neu."
  style:{layout:"vertical",color:"gold",shape:"rect",label:"pay"},
  onClick:(d,a)=>$("#agree").checked?a.resolve():(msg("Bitte zuerst das Häkchen setzen.","err"),a.reject()),
  createOrder:async()=>(await post("/v1/shop/order")).id,
- onApprove:async(d,a)=>{msg("Zahlung wird abgeschlossen …");try{const j=await post("/v1/shop/capture",{order:d.orderID});
+ onApprove:async(d,a)=>{msg("Zahlung wird abgeschlossen …");try{const j=await post("/v1/shop/capture",{order:d.orderID,t:new URLSearchParams(location.search).get("t")||""});
   $("#buy").hidden=true;$("#done").hidden=false;$("#code").textContent=j.code;
-  $("#mailnote").textContent=j.mailed?("Wir haben ihn auch an "+j.email+" geschickt."):"Speichere dir den Code – er wird nur hier angezeigt.";
+  $("#mailnote").textContent=(j.account?"Premium ist schon auf deinem Jarvis-Konto – auf allen deinen Geräten. ":"")+(j.mailed?("Wir haben den Code auch an "+j.email+" geschickt."):"Speichere dir den Code – er wird nur hier angezeigt.");
  }catch(e){if(e.retry)return a.restart();msg(e.message,"err")}},
  onCancel:()=>msg("Abgebrochen – es wurde nichts abgebucht."),
  onError:()=>msg("PayPal hatte ein Problem. Es wurde nichts abgebucht – versuch es nochmal.","err"),
