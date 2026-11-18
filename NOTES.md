@@ -1,9 +1,8 @@
-Android-Version: 1.0.59
-PC-Version: 1.2.28
+Android-Version: 1.0.60
+PC-Version: 1.2.29
 
-1.0.59: Das Jarvis-Konto
-- Melde dich mit Google oder einem Code per E-Mail an (Mehr → Premium → Anmelden). Dein Premium gilt dann auf all deinen Geräten, auch auf einem neuen Handy.
-- Ein Code, den du einlöst oder kaufst, während du angemeldet bist, landet direkt auf deinem Konto.
+1.0.60: Anmelden per E-Mail-Code
+- Hinweis beim Anmelden: Kommt der Code nicht an, schau auch im Spam-Ordner nach.
 
-PC (1.2.28)
-- Das Konto gibt es auch am PC: Einstellungen → KI → Konto. Wer angemeldet ist, bekommt Premium automatisch.
+PC (1.2.29)
+- Derselbe Hinweis beim Anmelden am PC.
