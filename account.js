@@ -21,9 +21,9 @@ const CFG = {
   googleAuth: env.GOOGLE_AUTH_URL || "https://accounts.google.com/o/oauth2/v2/auth",
   googleToken: env.GOOGLE_TOKEN_URL || "https://oauth2.googleapis.com/token",
   publicUrl: (env.PUBLIC_URL || "https://jarvis-warpline.onrender.com").replace(/\/+$/, ""),
-  brevo: env.BREVO_API_KEY || "",
+  brevo: String(env.BREVO_API_KEY || "").trim(),          // (beim Einfügen rutschen gern Leerzeichen/Zeilenumbrüche mit)
   brevoBase: env.BREVO_BASE || "https://api.brevo.com",
-  from: env.MAIL_FROM || "",
+  from: String(env.MAIL_FROM || "").trim(),
   maxDevices: Number(env.ACCOUNT_DEVICES || 10),
 };
 const secret = () => premium.CFG.secret || "";
@@ -103,7 +103,10 @@ async function mailStart(email, log = () => {}) {
   }).catch(() => null);
   if (!r || !r.ok) {
     mailCodes.delete(e);
-    log(`WICHTIG: Anmelde-Mail ging nicht raus (${r ? "HTTP " + r.status : "keine Verbindung"}) – Brevo-Absender bestätigt?`);
+    let why = "";                                           // (Brevos eigene Begründung – nie der Schlüssel)
+    try { const j = await r.json(); why = ` ${String(j.code || "")}: ${String(j.message || "").slice(0, 200)}`; } catch (x) { }
+    const hint = r && r.status === 401 ? "BREVO_API_KEY prüfen (API-Schlüssel „xkeysib-…“, kein SMTP-Schlüssel)" : "Brevo-Absender bestätigt?";
+    log(`WICHTIG: Anmelde-Mail ging nicht raus (${r ? "HTTP " + r.status : "keine Verbindung"}${why}) – ${hint}`);
     throw Object.assign(new Error("Die Mail konnte gerade nicht verschickt werden. Versuch es gleich nochmal."), { status: 502 });
   }
   return true;
