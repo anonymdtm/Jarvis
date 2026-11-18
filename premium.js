@@ -116,7 +116,7 @@ function charge(id, dollars) {
 // ---------------------------------------------------------------- 1.6.0: jeder Code nur für ein Gerät (+ den gekoppelten PC)
 // Sebastian, 14.11.: „dass jeder Promocode nur einmal gültig ist … sobald du den eingelöst hast, funktioniert er nicht mehr“.
 // Das erste Gerät, das einen Code benutzt, bekommt ihn; dazu darf noch eins (Handy + PC). Ein drittes bekommt „schon eingelöst“.
-const MAX_DEVICES = Number(env.PREMIUM_DEVICES || 2);
+const MAX_DEVICES = Number(env.PREMIUM_DEVICES || 3);   // (Handy + PC + eins Luft, z. B. nach Neuinstallation)
 const owners = new Map();                                    // Code-ID → Set(Geräte)
 async function devices(id) {
   if (owners.has(id)) return owners.get(id);

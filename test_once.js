@@ -24,9 +24,10 @@ const up = http.createServer((req, res) => {
       assert.ok((await status(code, "handy-von-tim-123")).ok);
       assert.ok((await status(code, "handy-von-tim-123")).ok, "dasselbe Handy immer wieder");
       assert.ok((await status(code, "pc-von-tim-12345")).ok, "dazu sein PC");
+      assert.ok((await status(code, "handy-von-tim-neu")).ok, "eins Luft (z. B. nach Neuinstallation)");
       const third = await status(code, "handy-von-lea-999");
       assert.strictEqual(third.ok, false); assert.ok(/schon auf einem anderen Gerät/.test(third.error));
-      ok("Ein Code: ein Handy + ein PC – ein drittes Gerät bekommt „schon eingelöst“");
+      ok("Ein Code: ein Handy + ein PC – ein viertes Gerät bekommt „schon eingelöst“");
       let mo = await (await fetch(base + "/v1/models", { headers: { "x-jarvis-token": "geheim-token-123", "x-device": "x-geraet-1234" } })).json();
       assert.deepStrictEqual(mo.premium.chat, []); assert.strictEqual(mo.premium.strong_models, false);
       assert.deepStrictEqual((await status(code, "handy-von-tim-123")).models, []);
