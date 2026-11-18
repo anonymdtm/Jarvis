@@ -49,7 +49,7 @@ const upstream = http.createServer((req, res) => {
     const ask = async (task, extra = {}) => {
       const t0 = Date.now();
       const r = await fetch(base + "/v1/chat", { method: "POST",
-        headers: { "content-type": "application/json", "x-jarvis-token": "geheim-token-123", "x-device": "geraet-speed-1" },
+        headers: { "content-type": "application/json", "x-jarvis-token": "geheim-token-123", "x-device": "geraet-speed-1", "x-jarvis-version": "pc/1.2.31" },
         body: JSON.stringify({ messages: [{ role: "user", content: "Was ist das?" }], task, stream: true, ...extra }) });
       const text = await r.text();
       const got = text.split("\n").filter((l) => l.startsWith("data:")).map((l) => JSON.parse(l.slice(5)));

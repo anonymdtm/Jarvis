@@ -27,6 +27,10 @@ const env = process.env;
 const list = (v, d) => (v || d).split(",").map((s) => s.trim()).filter(Boolean);
 const CFG = {
   port: Number(env.PORT || 8787),
+  // 1.8.0 – der Nutzer, 18.11.: „jeder, der die App schon hat … muss die neueste Version herunterladen“ – ältere Apps bekommen
+  // keine Antworten mehr, nur den Hinweis aufs Update (Apps ohne Versionsangabe sind alle älter als 1.0.62 / 1.2.31)
+  minAndroid: env.MIN_ANDROID || "1.0.62",
+  minPc: env.MIN_PC || "1.2.31",
   appToken: env.APP_TOKEN || "",                         // gemeinsames Geheimnis der App (hält Zufallsbesucher fern, keine Profis)
   geminiKey: env.GEMINI_API_KEY || "",
   openrouterKey: env.OPENROUTER_API_KEY || "",
@@ -94,6 +98,23 @@ function clientIp(req) {
   // (der Anbieter hängt die echte Adresse hinten an – vorne kann jeder etwas hineinschreiben)
   const parts = fwd.split(",").map((s) => s.trim()).filter(Boolean);
   return (CFG.trustProxy && parts.length ? parts[parts.length - 1] : req.socket.remoteAddress || "?").slice(0, 64);
+}
+
+/** "1.0.62" < "1.0.100"; Müll zählt als 0. */
+function olderThan(v, min) {
+  const a = String(v || "").split(/[^0-9]+/).filter(Boolean).map(Number), b = String(min || "").split(/[^0-9]+/).filter(Boolean).map(Number);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) { const x = a[i] || 0, y = b[i] || 0; if (x !== y) return x < y; }
+  return false;
+}
+/** Die App schickt „android/1.0.62“ oder „pc/1.2.31“ (ab dieser Version). → null: alles gut, sonst der Satz fürs Update. */
+const UPDATE_TEXT = "Es gibt eine neue Jarvis-Version – bitte aktualisiere zuerst, danach geht alles wie gewohnt weiter. " +
+  "Auf dem Handy: die Meldung „Update“ in der App antippen. Am PC: oben auf „Jetzt laden“. " +
+  "Oder lade sie hier: https://github.com/anonymdtm/Jarvis/releases/latest";
+function updateNeeded(req) {
+  const m = /^(android|pc)\/([0-9][0-9.]*)$/i.exec(String(req.headers["x-jarvis-version"] || "").trim());
+  if (!m) return { old: true, text: UPDATE_TEXT };                          // (vor 1.0.62 / 1.2.31: keine Angabe)
+  const min = m[1].toLowerCase() === "pc" ? CFG.minPc : CFG.minAndroid;
+  return olderThan(m[2], min) ? { old: false, text: UPDATE_TEXT, min } : null;
 }
 
 function sameSecret(a, b) {
@@ -856,6 +877,19 @@ const server = http.createServer(async (req, res) => {
     const ip = clientIp(req);
     const device = String(req.headers["x-device"] || "").slice(0, 80);
     if (!/^[A-Za-z0-9-]{8,80}$/.test(device)) return send(res, 400, { error: "Gerät unbekannt" });
+    const upd = updateNeeded(req);
+    if (upd) {
+      // neue Apps (mit Versionsangabe, aber zu alt): 426 → sie zeigen die Update-Seite
+      if (!upd.old) return send(res, 426, { error: upd.text, update: true, min: upd.min });
+      // alte Apps: der Hinweis als ganz normale Antwort (gesprochen/angezeigt); Nebenaufgaben ohne Stream bekommen einen Fehler
+      let b = {};
+      try { b = JSON.parse(await readBody(req)); } catch (e) { }
+      if (!b || b.stream !== true) return send(res, 426, { error: upd.text, update: true });
+      res.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store" });
+      res.write(`data: ${JSON.stringify({ delta: upd.text })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, model: "update" })}\n\n`);
+      return res.end();
+    }
     // Premium: ein gültiger Code mit Rest-Budget – eigene (großzügige) Grenzen, das Tageslimit der Gratis-Modelle gilt nicht
     let prem = null, premNote = null;
     const who = await premiumFor(req, device);

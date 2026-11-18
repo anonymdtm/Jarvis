@@ -62,7 +62,7 @@ const upstream = http.createServer((req, res) => {
     const base = `http://127.0.0.1:${server.address().port}`;
     let ipNo = 1;
     const post = (body, h = {}, raw) => fetch(base + "/v1/chat", { method: "POST",
-      headers: { "content-type": "application/json", "x-jarvis-token": "geheim-token-123", "x-device": "geraet-0001", "x-forwarded-for": `10.0.0.${ipNo}`, ...h },
+      headers: { "content-type": "application/json", "x-jarvis-token": "geheim-token-123", "x-device": "geraet-0001", "x-jarvis-version": "android/1.0.62", "x-forwarded-for": `10.0.0.${ipNo}`, ...h },
       body: raw !== undefined ? raw : JSON.stringify(body) });
     const ok = (m) => console.log("  ok   " + m);
     const hi = { messages: [{ role: "user", content: "Hallo" }] };
@@ -72,6 +72,25 @@ const upstream = http.createServer((req, res) => {
       assert.equal((await post(hi, { "x-jarvis-token": "" })).status, 401); ok("ohne Token: abgewiesen");
       assert.equal((await post(hi, { "x-device": "t1" })).status, 400); ok("Geräte-ID muss eine echte ID sein");
       assert.equal((await post(hi, { "content-type": "text/plain" })).status, 415); ok("nur JSON");
+      // --- 1.8.0: alte Apps müssen aktualisieren
+      {
+        const legacy = await post({ ...hi, stream: true }, { "x-jarvis-version": "" });
+        assert.equal(legacy.status, 200);
+        const txt = await legacy.text();
+        assert.ok(/neue Jarvis-Version/.test(txt) && /"done":true/.test(txt), txt);
+        ok("alte App ohne Versionsangabe: der Update-Hinweis als Antwort (gestreamt)");
+        const side = await post({ ...hi, stream: false }, { "x-jarvis-version": "" });
+        assert.equal(side.status, 426); assert.ok((await side.json()).update);
+        ok("alte App, Nebenaufgabe ohne Stream: 426 mit Hinweis");
+        const tooOld = await post({ ...hi, stream: true }, { "x-jarvis-version": "android/1.0.61" });
+        assert.equal(tooOld.status, 426); const j = await tooOld.json(); assert.ok(j.update && j.min === "1.0.62");
+        assert.equal((await post({ ...hi, stream: true }, { "x-jarvis-version": "pc/1.2.30" })).status, 426);
+        ok("neue App, aber zu alt: 426 (Handy und PC)");
+        // (eine leere Anfrage: 400 heißt „am Update-Tor vorbei“, ohne ein Modell zu fragen)
+        assert.equal((await post({ messages: [] }, { "x-jarvis-version": "pc/1.2.31", "x-device": "geraet-pcneu1" })).status, 400);
+        assert.equal((await post({ messages: [] }, { "x-jarvis-version": "android/1.0.100", "x-device": "geraet-neu100" })).status, 400);
+        ok("aktuelle Version (auch 1.0.100 > 1.0.62): kein Update nötig");
+      }
       // --- Eingabeprüfung (bevor ein Modell gefragt wird)
       ipNo = 2;
       const bad = [

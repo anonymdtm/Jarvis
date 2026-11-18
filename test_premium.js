@@ -46,7 +46,7 @@ const upstream = http.createServer((req, res) => {
   server.listen(0, "127.0.0.1", async () => {
     const base = `http://127.0.0.1:${server.address().port}`;
     const ok = (m) => console.log("  ok   " + m);
-    const H = { "content-type": "application/json", "x-jarvis-token": "geheim-token-123", "x-device": "geraet-premium-1" };
+    const H = { "content-type": "application/json", "x-jarvis-token": "geheim-token-123", "x-device": "geraet-premium-1", "x-jarvis-version": "android/1.0.62" };
     const ask = async (code, extra = {}, device = "geraet-premium-1") => {
       const r = await fetch(base + "/v1/chat", { method: "POST", headers: { ...H, "x-device": device, ...(code ? { "x-jarvis-premium": code } : {}) },
         body: JSON.stringify({ messages: [{ role: "user", content: "Hallo" }], stream: true, ...extra }) });
