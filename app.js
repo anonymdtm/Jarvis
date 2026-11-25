@@ -81,12 +81,14 @@
   // nach Einwilligung frisch von GitHub
   const nice = d => { try { return d ? new Date(d.length === 10 ? d + "T12:00:00Z" : d).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" }) : ""; } catch (e) { return ""; } };
   function fact(id, v) { const el = $(id); if (el) el.textContent = v || "–"; }
-  function showVersions(a, p, date, sizeA, sizeP) {
+  // (25.11.2026: each tile has its own "Stand" – a new PC version alone keeps the Android date, and the other way round)
+  function showVersions(a, p, dateA, dateP, sizeA, sizeP) {
     fact("#v-android", a); fact("#v-pc", p);
     fact("#s-android", sizeA ? sizeA + " MB" : ""); fact("#s-pc", sizeP ? sizeP + " MB" : "");
-    fact("#d-android", date); fact("#d-pc", date);
+    fact("#d-android", dateA); fact("#d-pc", dateP);
   }
-  showVersions(CFG.androidVersion, CFG.pcVersion, nice(CFG.versionDate), CFG.androidSize, CFG.pcSize);
+  showVersions(CFG.androidVersion, CFG.pcVersion, nice(CFG.androidDate || CFG.versionDate), nice(CFG.pcDate || CFG.versionDate),
+    CFG.androidSize, CFG.pcSize);
 
   async function loadLatest() {
     if (!versionEl || consent() !== "yes") return;
@@ -96,10 +98,14 @@
       const j = await r.json();
       const apk = (j.assets || []).find(a => /\.apk$/i.test(a.name));
       const setup = (j.assets || []).find(a => /\.exe$/i.test(a.name));
-      const when = j.published_at ? new Date(j.published_at).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : "";
+      // the release is the Android version (its date); the PC installer may be newer – then it was swapped in later
+      const pcAt = (setup && setup.updated_at) || j.published_at || "";
+      const newest = [j.published_at || "", pcAt].sort().pop();
+      const when = newest ? new Date(newest).toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" }) : "";
       const pcv = /PC-Version:\s*v?([0-9][0-9.]*[0-9])/i.exec(j.body || "");
       versionEl.textContent = `Aktuelle Version: Android ${j.tag_name || j.name}${pcv ? " · PC " + pcv[1] : ""}${when ? " · " + when : ""}${apk ? " · APK " + Math.round(apk.size / 1048576) + " MB" : ""}${setup ? " · Setup " + Math.round(setup.size / 1048576) + " MB" : ""}`;
-      showVersions(j.tag_name || j.name || CFG.androidVersion, pcv ? pcv[1] : CFG.pcVersion, nice(j.published_at) || nice(CFG.versionDate),
+      showVersions(j.tag_name || j.name || CFG.androidVersion, pcv ? pcv[1] : CFG.pcVersion,
+        nice(j.published_at) || nice(CFG.androidDate || CFG.versionDate), nice(pcAt) || nice(CFG.pcDate || CFG.versionDate),
         apk ? Math.round(apk.size / 1048576) : CFG.androidSize, setup ? Math.round(setup.size / 1048576) : CFG.pcSize);
       if (apk && dl) dl.href = apk.browser_download_url;
       if (setup && dlPc) dlPc.href = setup.browser_download_url;

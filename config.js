@@ -10,6 +10,9 @@ window.JARVIS_SITE = {
   androidVersion: "1.0.62",
   pcVersion: "1.2.32",
   versionDate: "2026-11-25",
+  // der Stand je Kachel (eine neue PC-Version allein lässt das Android-Datum stehen) – trägt der Workflow ebenfalls ein
+  androidDate: "2026-11-18",
+  pcDate: "2026-11-25",
   // Dateigrößen in MB (stehen in den Download-Kacheln) – trägt der Workflow ebenfalls selbst ein
   androidSize: "72",
   pcSize: "67",
