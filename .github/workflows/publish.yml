@@ -31,7 +31,12 @@ jobs:
             for old in $(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name'); do
               [ -f "$old" ] || gh release delete-asset "$TAG" "$old" --yes --repo "$GITHUB_REPOSITORY"
             done
-            gh release upload "$TAG" *.apk *.exe --clobber --repo "$GITHUB_REPOSITORY"
+            # (nur was sich geändert hat – eine unveränderte APK behält ihr Datum, die Webseite zeigt es an der Kachel)
+            for f in *.apk *.exe; do
+              old=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq ".assets[] | select(.name==\"$f\") | .digest" 2>/dev/null)
+              new="sha256:$(sha256sum "$f" | cut -d' ' -f1)"
+              if [ -n "$old" ] && [ "$old" = "$new" ]; then echo "$f ist unverändert – bleibt."; else gh release upload "$TAG" "$f" --clobber --repo "$GITHUB_REPOSITORY"; fi
+            done
             gh release edit "$TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
           else
             gh release create "$TAG" *.apk *.exe --title "Jarvis $TAG" --notes-file NOTES.md --repo "$GITHUB_REPOSITORY"
@@ -62,6 +67,14 @@ jobs:
                   values[key] = str(round(os.path.getsize(files[0]) / 1048576))
           p = "site/config.js"
           s = open(p, encoding="utf-8").read()
+          # der Stand je Kachel: nur wo sich die Version geändert hat, steht das neue Datum
+          def cur(key):
+              mm = re.search(r'\b' + key + r':\s*"([^"]*)"', s)
+              return mm.group(1) if mm else ""
+          if cur("androidVersion") != values["androidVersion"] or not cur("androidDate"):
+              values["androidDate"] = values["versionDate"]
+          if "pcVersion" in values and (cur("pcVersion") != values["pcVersion"] or not cur("pcDate")):
+              values["pcDate"] = values["versionDate"]
           for key, val in values.items():
               s, n = re.subn(r'(\b' + key + r':\s*")[^"]*(")', lambda mm: mm.group(1) + val + mm.group(2), s, count=1)
               if n == 0:
