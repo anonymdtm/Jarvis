@@ -12,11 +12,16 @@
 const crypto = require("crypto");
 
 const env = process.env;
+// 1.9.2: beim Einfügen bei Render rutscht gern die ganze Zeile „UPSTASH_REDIS_REST_TOKEN="…"" oder ein Leerzeichen mit –
+// Name, Gleichheitszeichen, Anführungszeichen und Leerraum werden hier abgeschnitten
+function envValue(name) {
+  return String(env[name] || "").trim().replace(new RegExp("^(?:export\\s+)?" + name + "\\s*=\\s*"), "").replace(/^["']|["']$/g, "").trim();
+}
 const CFG = {
   secret: env.PREMIUM_SECRET || "",
   admin: env.ADMIN_TOKEN || "",
-  upstashUrl: (env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, ""),
-  upstashToken: env.UPSTASH_REDIS_REST_TOKEN || "",
+  upstashUrl: envValue("UPSTASH_REDIS_REST_URL").replace(/\/+$/, ""),
+  upstashToken: envValue("UPSTASH_REDIS_REST_TOKEN"),
   // Abo → Budget in Dollar für die Laufzeit des Codes (Standard 30 Tage)
   plans: Object.fromEntries((env.PREMIUM_PLANS || "test:1,basis:4,plus:7,max:15").split(",").map((s) => s.trim().split(":"))
     .filter((p) => p.length === 2 && Number(p[1]) > 0).map(([n, b]) => [n, Number(b)])),
@@ -261,4 +266,4 @@ const j=await r.json().catch(()=>({error:"Fehler"}));o.innerHTML="";if(j.code){c
 const b=document.createElement("button");b.id="copy";b.textContent="Code kopieren";b.onclick=()=>{navigator.clipboard.writeText(j.code);b.textContent="Kopiert ✓"};o.append(b);
 const s=document.createElement("small");s.textContent=j.budget+" $ Guthaben · gültig bis "+j.until.split("-").reverse().join(".")+" · nur für ein Gerät";o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
 
-module.exports = { imageModel: () => painter, upstash, upstashCheck, owners, MAX_DEVICES, claim, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };
+module.exports = { imageModel: () => painter, upstash, upstashCheck, envValue, owners, MAX_DEVICES, claim, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };
