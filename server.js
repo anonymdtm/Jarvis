@@ -509,6 +509,25 @@ function readBody(req, max = CFG.maxBody) {
   });
 }
 
+// ---------------------------------------------------------------- Besucher der Webseite (1.9.0, siehe visits.js)
+const visits = require("./visits.js");
+const visitsByIp = limiter(Number(env.VISITS_PER_MINUTE || 30), Number(env.VISITS_PER_DAY || 20_000));
+async function handleVisits(req, res) {
+  const h = visits.cors(req);
+  const reply = (code, obj) => { res.writeHead(code, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...h }); res.end(JSON.stringify(obj)); };
+  if (req.method === "OPTIONS") { res.writeHead(204, h); return res.end(); }
+  if (req.method === "GET") return reply(200, await visits.counts());
+  if (req.method !== "POST") return reply(405, { error: "nur GET oder POST" });
+  // (aus dem Browser nur von der Webseite – sendBeacon schickt text/plain, fetch JSON)
+  if (req.headers.origin && !h["access-control-allow-origin"]) return reply(403, { error: "nicht erlaubt" });
+  const ip = clientIp(req);
+  if (visitsByIp(ip)) return reply(429, await visits.counts());
+  let b = {};
+  try { b = JSON.parse(await readBody(req, 512)); } catch (e) { return reply(400, { error: "kaputt" }); }
+  if (!visits.okId(b && b.id)) return reply(400, { error: "Nummer fehlt" });
+  return reply(200, await visits.beat(b.id, ip, b.bye === true));
+}
+
 // ---------------------------------------------------------------- Hilfe-Tickets (1.0.43, siehe help.js)
 const help = require("./help.js");
 const helpByDevice = limiter(Number(env.HELP_PER_MINUTE || 120), Number(env.HELP_PER_DAY || 20_000));
@@ -871,6 +890,7 @@ const server = http.createServer(async (req, res) => {
     if (req.url === "/v1/image" || req.url === "/v1/stt" || req.url === "/v1/models") return await handleFree(req, res, log);
     if (req.url === "/kaufen" || req.url.startsWith("/kaufen?") || req.url.startsWith("/v1/shop/")) return await handleShop(req, res, log);
     if (req.url.startsWith("/v1/account/")) return await handleAccount(req, res, log);
+    if (req.url === "/v1/visits") return await handleVisits(req, res);
     if (req.method !== "POST" || req.url !== "/v1/chat") return send(res, 404, { error: "nicht gefunden" });
     if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
     if (!String(req.headers["content-type"] || "").includes("application/json")) return send(res, 415, { error: "nur JSON" });
@@ -990,4 +1010,4 @@ if (require.main === module) {
   });
 }
 server.on("upgrade", handleUpgrade);
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop, account };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop, account, visits };
