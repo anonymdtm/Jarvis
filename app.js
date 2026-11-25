@@ -4,6 +4,7 @@
   const CFG = window.JARVIS_SITE || {};
   const $ = (s, r = document) => r.querySelector(s);
   const CONSENT_KEY = "jarvis.consent";                       // "yes" | "no" – nur im Browser des Besuchers
+  const VISITOR_KEY = "jarvis.visitor";                       // Zufallsnummer für den Besucherzähler – nur nach Einwilligung
 
   // ------------------------------------------------------------------ the core (canvas): flach, ohne Leuchten,
   // Farben aus dem Stylesheet (hell/dunkel wie das System)
@@ -65,8 +66,8 @@
   function setConsent(v) { try { localStorage.setItem(CONSENT_KEY, v); } catch (e) { } }
   const banner = $("#consent");
   if (banner && !consent()) banner.classList.add("on");
-  $("#consent-yes")?.addEventListener("click", () => { setConsent("yes"); banner.classList.remove("on"); loadLatest(); });
-  $("#consent-no")?.addEventListener("click", () => { setConsent("no"); banner.classList.remove("on"); });
+  $("#consent-yes")?.addEventListener("click", () => { setConsent("yes"); banner.classList.remove("on"); loadLatest(); visitorsOn(); });
+  $("#consent-no")?.addEventListener("click", () => { setConsent("no"); banner.classList.remove("on"); visitorsOff(); });
   $("#consent-open")?.addEventListener("click", e => { e.preventDefault(); banner.classList.add("on"); });
 
   // ------------------------------------------------------------------ latest version (GitHub Releases API, only with consent)
@@ -191,6 +192,54 @@
       }
     }
   } catch (e) { }
+
+  // ------------------------------------------------------------------ visitors (the user, 25.11.: "wie viele gerade live
+  // auf der Webseite sind und wie viele jemals da waren" – one browser is one person, also after closing and coming back).
+  // Only with consent: the browser keeps a random number ("jarvis.visitor") and says "still here" every 30 s while the page
+  // is open; the Jarvis server counts each number once (it only keeps a fingerprint of it, never the IP).
+  function visitorsOn() {
+    const box = $("#visitors");
+    if (!box || !CFG.server || consent() !== "yes" || visitorsOn.timer) return;
+    let id = null;
+    try {
+      id = localStorage.getItem(VISITOR_KEY);
+      if (!id || !/^[A-Za-z0-9-]{16,64}$/.test(id)) {
+        id = (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""));
+        localStorage.setItem(VISITOR_KEY, id);
+      }
+    } catch (e) { return; }                                     // (no storage – nothing to count)
+    const url = CFG.server.replace(/\/+$/, "") + "/v1/visits";
+    const de = n => Number(n || 0).toLocaleString("de-DE");
+    const show = c => {
+      if (!c || typeof c.live !== "number") return;
+      $("#v-live").textContent = de(Math.max(1, c.live));      // (you are here too)
+      $("#v-total").textContent = de(Math.max(1, c.total));
+      box.hidden = false;
+    };
+    const beat = async () => {
+      if (document.visibilityState === "hidden") return;
+      try {
+        // text/plain: no extra preflight request
+        const r = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ id }), keepalive: true });
+        show(await r.json());
+      } catch (e) { }
+    };
+    const bye = () => { try { navigator.sendBeacon && navigator.sendBeacon(url, new Blob([JSON.stringify({ id, bye: true })], { type: "text/plain" })); } catch (e) { } };
+    visitorsOn.bye = bye;
+    visitorsOn.onVis = () => { if (document.visibilityState === "hidden") bye(); else beat(); };
+    document.addEventListener("visibilitychange", visitorsOn.onVis);
+    addEventListener("pagehide", bye);
+    visitorsOn.timer = setInterval(beat, 30000);
+    beat();
+  }
+  function visitorsOff() {
+    if (visitorsOn.timer) { clearInterval(visitorsOn.timer); visitorsOn.timer = null; }
+    if (visitorsOn.onVis) document.removeEventListener("visibilitychange", visitorsOn.onVis);
+    if (visitorsOn.bye) { removeEventListener("pagehide", visitorsOn.bye); visitorsOn.bye(); }
+    try { localStorage.removeItem(VISITOR_KEY); } catch (e) { }
+    const box = $("#visitors"); if (box) box.hidden = true;
+  }
+  visitorsOn();
 
   // ------------------------------------------------------------------ social
   const ig = $("#instagram");
