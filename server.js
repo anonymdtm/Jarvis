@@ -1004,6 +1004,11 @@ if (require.main === module) {
   else console.log(`Premium kaufen: ${shop.CFG.live ? "LIVE – echtes Geld" : "PayPal-Sandbox (Testgeld)"}, ${shop.CFG.price} € für ${shop.CFG.days} Tage`);
   if (!cloud.on()) console.warn("HINWEIS: CF_ACCOUNT_ID / CF_API_TOKEN fehlen – kostenlose Bilder und genaues Zuhören (Cloudflare) sind aus.");
   if (premium.on() && !premium.CFG.upstashUrl) console.warn("HINWEIS: Premium ohne UPSTASH_REDIS_REST_URL – der Verbrauch der Codes beginnt nach jedem Neustart wieder bei 0.");
+  // 1.9.1: eingetragen heißt nicht, dass es geht (am 25.11. lehnte Upstash ab – Konten und Zähler gingen bei jedem Neustart verloren)
+  premium.upstashCheck().then((c) => {
+    if (c.ok) console.log("Upstash antwortet – Konten, Guthaben und Besucherzahlen werden dauerhaft gespeichert.");
+    else if (c.why !== "fehlt") console.warn(`WICHTIG: Upstash antwortet nicht (${c.why}) – Konten, Guthaben und Besucherzahlen gehen bei jedem Neustart verloren. UPSTASH_REDIS_REST_URL und _TOKEN bei Render prüfen.`);
+  });
   server.listen(CFG.port, () => {
     console.log(`Jarvis-Proxy läuft auf Port ${CFG.port} – Reden: ${CFG.chat.join(" → ")} | Code: ${CFG.code.join(" → ")} | Bilder: ${CFG.vision.join(" → ")}`);
     if (keepAwake()) console.log("Hält sich wach (ruft sich alle 10 Minuten selbst auf).");

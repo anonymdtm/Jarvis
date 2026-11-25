@@ -94,6 +94,16 @@ async function upstash(...cmd) {
     return r.ok ? (await r.json()).result : null;
   } catch { return null; }
 }
+/** 1.9.1: antwortet Upstash wirklich? (der Helfer oben schluckt Fehler – beim Start soll man es im Log sehen) */
+async function upstashCheck() {
+  if (!CFG.upstashUrl || !CFG.upstashToken) return { ok: false, why: "fehlt" };
+  try {
+    const r = await fetch(CFG.upstashUrl, { method: "POST", headers: { authorization: `Bearer ${CFG.upstashToken}`, "content-type": "application/json" },
+      body: JSON.stringify(["PING"]), signal: AbortSignal.timeout(6000) });
+    if (r.ok) return { ok: true };
+    return { ok: false, why: `HTTP ${r.status}` + (r.status === 401 ? " – der Token stimmt nicht" : r.status === 404 ? " – die Adresse stimmt nicht" : "") };
+  } catch (e) { return { ok: false, why: "nicht erreichbar – die Adresse stimmt nicht? (" + String(e.cause?.code || e.name || e) + ")" }; }
+}
 async function spent(id) {
   if (!used.has(id)) {
     const v = Number(await upstash("GET", `jarvis:used:${id}`));
@@ -251,4 +261,4 @@ const j=await r.json().catch(()=>({error:"Fehler"}));o.innerHTML="";if(j.code){c
 const b=document.createElement("button");b.id="copy";b.textContent="Code kopieren";b.onclick=()=>{navigator.clipboard.writeText(j.code);b.textContent="Kopiert ✓"};o.append(b);
 const s=document.createElement("small");s.textContent=j.budget+" $ Guthaben · gültig bis "+j.until.split("-").reverse().join(".")+" · nur für ein Gerät";o.append(s)}else o.textContent=j.error||"Fehler"};</script></html>`;
 
-module.exports = { imageModel: () => painter, upstash, owners, MAX_DEVICES, claim, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };
+module.exports = { imageModel: () => painter, upstash, upstashCheck, owners, MAX_DEVICES, claim, CFG, on, make, parse, status, charge, spent, setModels, models, pick, cost, ADMIN_PAGE, used, PLAN_IDS };

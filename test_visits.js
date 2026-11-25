@@ -8,6 +8,7 @@ const S = (k) => sets.get(k) || sets.set(k, new Set()).get(k);
 const Z = (k) => zsets.get(k) || zsets.set(k, new Map()).get(k);
 const up = http.createServer((req, res) => {
   let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => {
+    if (req.headers.authorization !== "Bearer t") { res.writeHead(401, { "content-type": "application/json" }); return res.end('{"error":"WRONGPASS"}'); }
     const [cmd, key, ...a] = JSON.parse(b); let r = null;
     if (cmd === "SISMEMBER") r = S(key).has(a[0]) ? 1 : 0;
     else if (cmd === "SADD") { r = S(key).has(a[0]) ? 0 : 1; S(key).add(a[0]); }
@@ -15,6 +16,7 @@ const up = http.createServer((req, res) => {
     else if (cmd === "ZADD") { Z(key).set(a[1], Number(a[0])); r = 1; }
     else if (cmd === "ZREM") r = Z(key).delete(a[0]) ? 1 : 0;
     else if (cmd === "ZCARD") r = Z(key).size;
+    else if (cmd === "PING") r = "PONG";
     else if (cmd === "ZREMRANGEBYSCORE") { r = 0; for (const [m, sc] of Z(key)) if (sc <= Number(a[1])) { Z(key).delete(m); r++; } }
     res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ result: r }));
   });
@@ -86,10 +88,22 @@ const up = http.createServer((req, res) => {
 
       // ohne Upstash: im Speicher (bis zum Neustart)
       const url = premium.CFG.upstashUrl; premium.CFG.upstashUrl = "";
-      assert.deepStrictEqual(await beat("c".repeat(24), {}, { ip: "10.1.1.1" }), { live: 1, total: 1 });
-      assert.deepStrictEqual(await beat("c".repeat(24), {}, { ip: "10.1.1.1" }), { live: 1, total: 1 });
+      const before = await (await fetch(base)).json();
+      assert.deepStrictEqual(await beat("c".repeat(24), {}, { ip: "10.1.1.1" }), { live: before.live + 1, total: before.total + 1 });
+      assert.deepStrictEqual(await beat("c".repeat(24), {}, { ip: "10.1.1.1" }), { live: before.live + 1, total: before.total + 1 });
       premium.CFG.upstashUrl = url;
       ok("ohne Upstash zählt der Server im Speicher weiter");
+
+      // 1.9.1 – der Nutzer, 25.11.: Handy + PC offen, trotzdem „1 Besucher“ – Upstash lehnte den Token ab, nichts wurde gezählt
+      assert.deepStrictEqual(await premium.upstashCheck(), { ok: true });
+      premium.CFG.upstashToken = "falsch";
+      assert.ok(/401.*Token/.test((await premium.upstashCheck()).why));
+      const b2 = await (await fetch(base)).json();
+      const r1 = await beat("handy-0000000000000001", {}, { ip: "10.3.3.3" });
+      const r2 = await beat("pc-000000000000000001", {}, { ip: "10.3.3.3" });
+      assert.strictEqual(r2.total, b2.total + 2); assert.ok(r2.live >= 2 && r1.total === b2.total + 1);
+      premium.CFG.upstashToken = "t";
+      ok("Upstash lehnt den Token ab: der Server zählt trotzdem (Handy + PC = 2) und meldet den Grund");
 
       console.log("ALLE BESUCHER-TESTS OK"); process.exit(0);
     } catch (e) { console.error("FEHLER", e); process.exit(1); }

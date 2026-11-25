@@ -40,17 +40,22 @@ function persistent() { return !!(premium.CFG.upstashUrl && premium.CFG.upstashT
 /** Ein Lebenszeichen (oder „bye“: die Seite wurde geschlossen). → { live, total } */
 async function beat(id, ip, bye = false) {
   const f = finger(id), now = Date.now();
-  if (persistent()) {
-    if (bye) await premium.upstash("ZREM", "jarvis:live", f);
-    else {
-      let counted = Number(await premium.upstash("SISMEMBER", "jarvis:visitors", f)) === 1;
-      if (!counted && !tooManyNew(ip)) counted = (await premium.upstash("SADD", "jarvis:visitors", f)) !== null;
-      if (counted) await premium.upstash("ZADD", "jarvis:live", now, f);
+  // (1.9.1: immer auch im Speicher – antwortet Upstash nicht, zählt der Server trotzdem weiter, bis zum Neustart)
+  if (bye) {
+    mem.live.delete(f);
+    if (persistent()) await premium.upstash("ZREM", "jarvis:live", f);
+  } else {
+    let known = mem.all.has(f);
+    if (!known && persistent()) known = Number(await premium.upstash("SISMEMBER", "jarvis:visitors", f)) === 1;
+    const counted = known || !tooManyNew(ip);
+    if (counted) {
+      if (mem.all.size < 200_000) mem.all.add(f);
+      mem.live.set(f, now);
+      if (persistent()) {
+        if (!known) await premium.upstash("SADD", "jarvis:visitors", f);
+        await premium.upstash("ZADD", "jarvis:live", now, f);
+      }
     }
-  } else if (bye) mem.live.delete(f);
-  else {
-    if (!mem.all.has(f) && !tooManyNew(ip)) mem.all.add(f);
-    if (mem.all.has(f)) mem.live.set(f, now);
   }
   cache.at = 0;
   return counts();
@@ -66,10 +71,10 @@ async function counts() {
     total = await premium.upstash("SCARD", "jarvis:visitors");
     live = await premium.upstash("ZCARD", "jarvis:live");
   }
-  if (live === null || total === null) {                          // (ohne Upstash oder Upstash gerade nicht erreichbar)
-    for (const [f, t] of mem.live) if (now - t > CFG.liveMs) mem.live.delete(f);
-    live = mem.live.size; total = mem.all.size;
-  }
+  for (const [f, t] of mem.live) if (now - t > CFG.liveMs) mem.live.delete(f);
+  // (ohne Upstash oder Upstash gerade nicht erreichbar: was dieser Server selbst gesehen hat; sonst das Größere)
+  live = Math.max(Number(live) || 0, mem.live.size);
+  total = Math.max(Number(total) || 0, mem.all.size);
   cache = { at: now, v: { live: Number(live) || 0, total: Math.max(Number(total) || 0, Number(live) || 0) } };
   return cache.v;
 }
