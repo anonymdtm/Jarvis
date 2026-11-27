@@ -509,6 +509,47 @@ function readBody(req, max = CFG.maxBody) {
   });
 }
 
+// ---------------------------------------------------------------- Den PC von unterwegs erreichen (1.10.0, siehe remote.js)
+const { Remote, okId, okBox } = require("./remote.js");
+const remote = new Remote();
+// (pro IP großzügig: der Bildschirm holt mehrere Bilder pro Sekunde; die engen Grenzen pro PC stehen in remote.js)
+const remoteByIp = limiter(Number(env.REMOTE_PER_MINUTE || 1500), Number(env.REMOTE_PER_DAY || 500_000));
+async function handleRemote(req, res) {
+  if (!CFG.appToken || !sameSecret(req.headers["x-jarvis-token"] || "", CFG.appToken)) return send(res, 401, { error: "nicht erlaubt" });
+  if (req.method !== "POST") return send(res, 405, { error: "nur POST" });
+  const path = req.url.split("?")[0];
+  const limit = remoteByIp(clientIp(req));
+  if (limit) return send(res, 429, { error: limit });
+  const max = path === "/v1/pc/answer" ? remote.L.answerBytes + 300 : path === "/v1/pc/call" ? remote.L.callBytes + 300 : 2000;
+  let b;
+  try { b = JSON.parse(await readBody(req, max) || "{}"); } catch (e) { return send(res, e instanceof Bad ? 413 : 400, { error: "kaputte Anfrage" }); }
+  if (!b || typeof b !== "object" || Array.isArray(b)) return send(res, 400, { error: "kaputte Anfrage" });
+  let done = false;
+  const reply = (code, obj) => {
+    if (done || res.writableEnded || res.destroyed) return;
+    done = true;
+    if (code === 204) { res.writeHead(204, { "cache-control": "no-store" }); return res.end(); }
+    send(res, code, obj);
+  };
+  if (path === "/v1/pc/wait") {
+    const ids = Array.isArray(b.ids) ? [...new Set(b.ids)].filter(okId).slice(0, remote.L.ids) : [];
+    if (!ids.length) return send(res, 400, { error: "Kennung fehlt" });
+    res.on("close", remote.wait(ids, reply, b.ms === undefined ? undefined : Number(b.ms)));
+    return;
+  }
+  if (path === "/v1/pc/call") {
+    if (!okId(b.id) || !okBox(b.box, remote.L.callBytes)) return send(res, 400, { error: "kaputte Anfrage" });
+    res.on("close", remote.call(b.id, b.box, b.to, reply));
+    return;
+  }
+  if (path === "/v1/pc/answer") {
+    if (typeof b.cid !== "string" || !/^[a-f0-9]{24}$/.test(b.cid) || !okBox(b.box, remote.L.answerBytes)) return send(res, 400, { error: "kaputte Anfrage" });
+    const got = remote.answer(b.cid, b.box);
+    return send(res, got ? 200 : 404, got ? { ok: true } : { error: "Das Handy wartet nicht mehr." });
+  }
+  return send(res, 404, { error: "nicht gefunden" });
+}
+
 // ---------------------------------------------------------------- Besucher der Webseite (1.9.0, siehe visits.js)
 const visits = require("./visits.js");
 const visitsByIp = limiter(Number(env.VISITS_PER_MINUTE || 30), Number(env.VISITS_PER_DAY || 20_000));
@@ -886,6 +927,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === "GET" && req.url === "/healthz") return send(res, 200, { ok: true });   // (auch zum Aufwecken)
     if (req.url.startsWith("/v1/help/")) return await handleHelp(req, res);
+    if (req.url.startsWith("/v1/pc/")) return await handleRemote(req, res);
     if (req.url.startsWith("/v1/premium/") || req.url === "/admin") return await handlePremium(req, res);
     if (req.url === "/v1/image" || req.url === "/v1/stt" || req.url === "/v1/models") return await handleFree(req, res, log);
     if (req.url === "/kaufen" || req.url.startsWith("/kaufen?") || req.url.startsWith("/v1/shop/")) return await handleShop(req, res, log);
@@ -1015,4 +1057,4 @@ if (require.main === module) {
   });
 }
 server.on("upgrade", handleUpgrade);
-module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop, account, visits };
+module.exports = { server, CFG, checkBody, clientIp, orWhy, resetHour, keepAwake, busy, help, live, premium, cloud, shop, account, visits, remote };
