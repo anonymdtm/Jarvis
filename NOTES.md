@@ -1,5 +1,18 @@
-Android-Version: 1.0.62
-PC-Version: 1.2.32
+Android-Version: 1.0.63
+PC-Version: 1.2.34
+
+1.0.63 / PC 1.2.34: Deinen PC von unterwegs steuern
+- Bist du nicht zu Hause, erreicht dein Handy deinen PC trotzdem – über den Jarvis-Server, Ende-zu-Ende verschlüsselt (der Server kann nichts mitlesen). Am Router musst du nichts einstellen. Der PC muss nur an sein und Jarvis laufen.
+- „Zeig mir Monitor 1“ klappt unterwegs genauso (als Bilder statt Video). Ansehen ist kostenlos, steuern gibt es mit Premium – wie zu Hause.
+- Am PC abschaltbar: Einstellungen → Handy → „Von unterwegs erreichbar“.
+- PC-Updates laufen jetzt ganz ohne Klicks durch: Jarvis schließt sich, aktualisiert sich und startet neu.
+
+PC (1.2.34): WhatsApp repariert
+- „Schreib meiner Prinzessin auf WhatsApp: Ich liebe dich“ findet jetzt den richtigen Chat – auch mit ungelesenen Nachrichten oder Emojis im Namen.
+- Keine komischen Rückfragen mehr wie „Meinst du 2 ungelesene Nachrichten …?“.
+- Ohne laufendes Spiel holt Jarvis WhatsApp kurz nach vorne und schickt die Nachricht gleich ab.
+- „Öffne WhatsApp“ öffnet WhatsApp – nicht mehr die Fotos-App.
+- Fragt Jarvis „Welchen meinst du?“, zählt nur eine klare Antwort („den ersten“, der Name oder „keinen“). Ohne Antwort passiert nichts.
 
 PC (1.2.32): WhatsApp am PC
 - Sag „Schreib Lena auf WhatsApp: Bin gleich da“ – Jarvis öffnet WhatsApp auf deinem zweiten Monitor und schreibt dort, ohne dich aus dem Spiel zu holen. Wer „meine Freundin“ ist, fragt er einmal und merkt es sich.
